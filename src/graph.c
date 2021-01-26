@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define COLOR(p) (p | p << 2 | p << 4 | p << 6)
+
 
 static const u32 CGA_EVEN = 0xB8000000L;
 static const u32 CGA_ODD = 0xB8002000L;
@@ -38,10 +40,27 @@ void reset_graphics() {
 
 void clear_screen(u8 color) {
 
-    u8 p = color | (color << 2) | (color << 4) | (color << 6);
+    u8 p = COLOR(color);
 
     memset((void*)CGA_EVEN, p, 8000);
     memset((void*)CGA_ODD, p, 8000);
+}
+
+
+void fill_rect(i16 x, i16 y, i16 w, i16 h, u8 color) {
+
+    i32 i;
+    u32 jump;
+    u8 p = COLOR(color);
+
+    for (i = 0; i < h; i += 2) {
+
+        jump = (u32)(((y + i)/2)*80 + x);
+        memset((void*)(CGA_ODD + jump), p, w);
+
+        jump = (u32)(((y + i)/2 + 1)*80 + x);
+        memset((void*)(CGA_EVEN + jump), p, w);
+    }
 }
 
 
