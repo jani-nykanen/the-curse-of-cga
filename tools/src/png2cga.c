@@ -129,7 +129,7 @@ static i32 convert_bitmap(const str in, const str out, bool writeMask) {
     for (i = 0; i < w * h; ++ i) {
 
         cdata[i] = find_color(pdata, i * 4);
-        mask[i] = (u8)(cdata[i*4 + 3] < ALPHA_LIMIT) * 3;
+        mask[i] = (u8)(pdata[i*4 + 3] >= ALPHA_LIMIT) * 3;
     }
 
 

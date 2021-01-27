@@ -15,6 +15,7 @@
 static bool cleared = false;
 static Vector2 testPos;
 static Bitmap* bmpFont = NULL;
+static Bitmap* bmpFigure = NULL;
 
 
 bool init_game_scene() {
@@ -22,8 +23,8 @@ bool init_game_scene() {
     cleared = false;
     testPos = vec2(40, 100);
 
-    bmpFont = load_bitmap("ASSETS/FONT.BIN");
-    if (bmpFont == NULL) {
+    if ((bmpFont = load_bitmap("ASSETS/FONT.BIN")) == NULL ||
+        (bmpFigure = load_bitmap("ASSETS/FIGURE.BIN")) == NULL) {
 
         return true;
     }
@@ -67,20 +68,23 @@ void game_redraw() {
 
     //if (!cleared) {
 
-        clear_screen(0);
+        clear_screen(2);
         cleared = true;
     //}
 
     draw_text_fast(bmpFont, "Hello world!", 1, 4, false);
 
+    draw_bitmap_region(bmpFigure, 0, 16, 4, 16, 4, 24);
+
     fill_rect(
         testPos.x - 4, 
         testPos.y - 13, 
-        32 / 4, 26, 2);
+        32 / 4, 26, 0);
 }
 
 
 void dispose_game_scene() {
 
     dispose_bitmap(bmpFont);
+    dispose_bitmap(bmpFigure);
 }

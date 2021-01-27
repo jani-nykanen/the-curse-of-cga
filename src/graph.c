@@ -75,8 +75,9 @@ void draw_bitmap_fast(Bitmap* bmp, i16 x, i16 y) {
 }
 
 
-void draw_bitmap_region_fast(Bitmap* bmp, i16 sx, i16 sy, i16 sw, 
-    i16 sh, i16 dx, i16 dy) {
+void draw_bitmap_region_fast(Bitmap* bmp, 
+    i16 sx, i16 sy, i16 sw, i16 sh, 
+    i16 dx, i16 dy) {
 
     i16 i;
     ulong djump;
@@ -131,6 +132,45 @@ void draw_text_fast(Bitmap* font, const str text, i16 x, i16 y, bool center) {
 
         dx += d / 4;
     }
+}
+
+
+void draw_bitmap_region(Bitmap* bmp, 
+    i16 sx, i16 sy, i16 sw, i16 sh, 
+    i16 dx, i16 dy) {
+
+    i16 x, y;
+    ulong djump;
+    ulong sjump;
+    u16 w = bmp->width / 4;
+    u8 mask;
+
+    u8* out;
+
+    // TODO: We could call _fast method here,
+    // but it does not handle flipping, hence
+    // we just draw nothing right now, if no
+    // mask is provided
+    if (bmp->mask == NULL) return;
+
+    djump = (ulong)((dy/2)*80 + dx);
+    sjump = (ulong)(sy*w + sx);
+
+    for (y = dy; y < dy + sh; ++ y) {   
+
+        out = (u8*)ADDR[y & 1];
+        for (x = 0; x < sw; ++ x) {
+
+            mask = bmp->mask[sjump];
+            out[djump] = ((bmp->pixels[sjump]) & mask) | 
+                            (out[djump] & ~mask);
+
+            ++ sjump;
+            ++ djump;
+        }
+        djump += 80 * (y & 1) - sw;
+        sjump += w - sw;
+    }   
 }
 
 
