@@ -73,6 +73,10 @@ void game_redraw(void* pself) {
         self->testPos.x - 4, 
         self->testPos.y - 13, 
         32 / 4, 26, 2);
+    fill_rect(
+        self->testPos.x - 12, 
+        self->testPos.y - 12, 
+        32 / 4, 26, 2);
 }
 
 
