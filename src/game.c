@@ -3,6 +3,7 @@
 #include "err.h"
 #include "graph.h"
 #include "keyb.h"
+#include "sprite.h"
 
 #include <stdlib.h>
 
@@ -16,15 +17,21 @@ static bool cleared = false;
 static Vector2 testPos;
 static Bitmap* bmpFont = NULL;
 static Bitmap* bmpFigure = NULL;
+static Bitmap* bmpFace = NULL;
+static Sprite testSpr;
+static i32 animDir;
 
 
 bool init_game_scene() {
 
     cleared = false;
-    testPos = vec2(40, 100);
+    testPos = vec2(160, 100);
+    testSpr = create_sprite(4, 16);
+    animDir = -1;
 
     if ((bmpFont = load_bitmap("ASSETS/FONT.BIN")) == NULL ||
-        (bmpFigure = load_bitmap("ASSETS/FIGURE.BIN")) == NULL) {
+        (bmpFigure = load_bitmap("ASSETS/FIGURE.BIN")) == NULL ||
+        (bmpFace = load_bitmap("ASSETS/FACE.BIN")) == NULL) {
 
         return true;
     }
@@ -33,25 +40,43 @@ bool init_game_scene() {
 }
 
 
+static void test_animation(i16 step) {
+
+    if (animDir == -1) {
+
+        spr_set_frame(&testSpr, 0, testSpr.row);
+        return;
+    }
+
+    spr_animate(&testSpr, animDir, 0, 3, 8, step);
+}
+
+
 bool game_refresh(i16 step) {
 
+    test_animation(step);
 
+    animDir = -1;
     if (keyb_get_ext_key(KEY_UP) & STATE_DOWN_OR_PRESSED) {
 
-        testPos.y -= 4;
+        testPos.y -= 2;
+        animDir = 2;
     }
     else if (keyb_get_ext_key(KEY_DOWN) & STATE_DOWN_OR_PRESSED) {
 
-        testPos.y += 4;
+        testPos.y += 2;
+        animDir = 0;
     }
 
     if (keyb_get_ext_key(KEY_LEFT) & STATE_DOWN_OR_PRESSED) {
 
-        testPos.x --;
+        testPos.x -= 2;
+        animDir = 3;
     }
     else if (keyb_get_ext_key(KEY_RIGHT) & STATE_DOWN_OR_PRESSED) {
 
-        testPos.x ++;
+        testPos.x += 2;
+        animDir = 1;
     }
 
     if (keyb_get_normal_key(KEY_Q) == STATE_PRESSED &&
@@ -72,14 +97,13 @@ void game_redraw() {
         cleared = true;
     //}
 
-    draw_text_fast(bmpFont, "Hello world!", 1, 4, false);
+    draw_text_fast(bmpFont, "Hello CGA!", 1, 4, false);
 
-    draw_bitmap_region(bmpFigure, 0, 16, 4, 16, 4, 24);
+    draw_bitmap_fast(bmpFace, 45, 48);
+    fill_rect(8, 96, 16, 32, 1);
 
-    fill_rect(
-        testPos.x - 4, 
-        testPos.y - 13, 
-        32 / 4, 26, 0);
+    draw_sprite(&testSpr, bmpFigure,
+        testPos.x/4 - 2, testPos.y-8);
 }
 
 

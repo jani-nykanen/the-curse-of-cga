@@ -10,5 +10,4 @@ void game_redraw();
 
 void dispose_game_scene();
 
-
 #endif // __GAME__

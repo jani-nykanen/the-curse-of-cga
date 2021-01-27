@@ -9,10 +9,10 @@
 #define COLOR(p) (p | p << 2 | p << 4 | p << 6)
 
 
-static const ulong CGA_EVEN = 0xB8000000L;
-static const ulong CGA_ODD = 0xB8002000L;
+static const u32 CGA_EVEN = 0xB8000000L;
+static const u32 CGA_ODD = 0xB8002000L;
 // For rendering
-static ulong ADDR[2];
+static u32 ADDR[2];
 
 
 static void set_video_mode(u16 mode) {
@@ -57,10 +57,10 @@ void clear_screen(u8 color) {
 void fill_rect(i16 x, i16 y, i16 w, i16 h, u8 color) {
 
     i16 i;
-    ulong jump;
+    u32 jump;
     u8 p = COLOR(color);
 
-    jump = (ulong)((y/2)*80 + x);
+    jump = (u32)((y/2)*80 + x);
     for (i = y; i < y+h; ++ i) {
 
         memset((void*)(ADDR[i & 1] + jump), p, w);
@@ -80,17 +80,17 @@ void draw_bitmap_region_fast(Bitmap* bmp,
     i16 dx, i16 dy) {
 
     i16 i;
-    ulong djump;
-    ulong sjump;
+    u32 djump;
+    u32 sjump;
     u16 w = bmp->width / 4;
 
-    djump = (ulong)((dy/2)*80 + dx);
-    sjump = (ulong)(sy*w + sx);
+    djump = (u32)((dy/2)*80 + dx);
+    sjump = (u32)(sy*w + sx);
 
     for (i = dy; i < dy + sh; ++ i) {
 
         memcpy((void*)(ADDR[i & 1] + djump), 
-               (void*)((ulong)bmp->pixels + sjump), sw);
+               (void*)((u32)bmp->pixels + sjump), sw);
 
         djump += 80 * (i & 1);
         sjump += w;
@@ -140,8 +140,8 @@ void draw_bitmap_region(Bitmap* bmp,
     i16 dx, i16 dy) {
 
     i16 x, y;
-    ulong djump;
-    ulong sjump;
+    u32 djump;
+    u32 sjump;
     u16 w = bmp->width / 4;
     u8 mask;
 
@@ -153,8 +153,8 @@ void draw_bitmap_region(Bitmap* bmp,
     // mask is provided
     if (bmp->mask == NULL) return;
 
-    djump = (ulong)((dy/2)*80 + dx);
-    sjump = (ulong)(sy*w + sx);
+    djump = (u32)((dy/2)*80 + dx);
+    sjump = (u32)(sy*w + sx);
 
     for (y = dy; y < dy + sh; ++ y) {   
 
@@ -171,6 +171,14 @@ void draw_bitmap_region(Bitmap* bmp,
         djump += 80 * (y & 1) - sw;
         sjump += w - sw;
     }   
+}
+
+
+void draw_sprite(Sprite* spr, Bitmap* bmp, i16 x, i16 y) {
+
+    draw_bitmap_region(bmp, 
+        spr->frame * spr->width, spr->row * spr->height,
+        spr->width, spr->height, x, y);
 }
 
 

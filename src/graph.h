@@ -3,6 +3,7 @@
 
 #include "types.h"
 #include "bitmap.h"
+#include "sprite.h"
 
 
 void init_graphics();
@@ -30,6 +31,7 @@ void draw_bitmap_region(Bitmap* bmp,
     i16 sx, i16 sy, i16 sw, i16 sh, 
     i16 dx, i16 dy);
 
+void draw_sprite(Sprite* spr, Bitmap* bmp, i16 x, i16 y);
 
 void vblank();
 
