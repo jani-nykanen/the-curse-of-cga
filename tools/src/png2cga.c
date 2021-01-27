@@ -71,18 +71,18 @@ static i32 find_color(u8* data, u32 loc) {
 static void write_array(FILE* f, u8* arr, u32 len) {
     
     u32 i;
-    u32 count = 0;
+    u32 count = 3;
     u8 bout = 0;
 
     for (i = 0; i < len; ++ i) {
 
         bout = bout | (arr[i] << (count*2));
 
-        if (++ count == 4) {
+        if (count -- == 0) {
 
             fwrite(&bout, 1, 1, f);
             bout = 0;
-            count = 0;
+            count = 3;
         }
     }
 }
