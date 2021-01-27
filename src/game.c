@@ -37,11 +37,11 @@ bool game_refresh(i16 step) {
 
     if (keyb_get_ext_key(KEY_UP) & STATE_DOWN_OR_PRESSED) {
 
-        testPos.y -= 4;;
+        testPos.y -= 4;
     }
     else if (keyb_get_ext_key(KEY_DOWN) & STATE_DOWN_OR_PRESSED) {
 
-        testPos.y += 4;;
+        testPos.y += 4;
     }
 
     if (keyb_get_ext_key(KEY_LEFT) & STATE_DOWN_OR_PRESSED) {
@@ -71,7 +71,7 @@ void game_redraw() {
         cleared = true;
     //}
 
-    draw_bitmap_fast(bmpFont, 0, 0);
+    draw_text_fast(bmpFont, "Hello world!", 1, 4, false);
 
     fill_rect(
         testPos.x - 4, 

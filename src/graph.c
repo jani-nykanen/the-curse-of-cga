@@ -56,46 +56,81 @@ void clear_screen(u8 color) {
 
 void fill_rect(i16 x, i16 y, i16 w, i16 h, u8 color) {
 
-    i32 i;
+    i16 i;
     ulong jump;
     u8 p = COLOR(color);
 
-    ulong addr1 = ADDR[y % 2];
-    ulong addr2 = ADDR[(y+1) % 2];
+    jump = (ulong)((y/2)*80 + x);
+    for (i = y; i < y+h; ++ i) {
 
-    for (i = 0; i < h; i += 2) {
-
-        jump = (ulong)(((y + i)/2)*80 + x);
-        memset((void*)(addr1 + jump), p, w);
-
-        jump += (ulong)((y % 2) * 80);
-        memset((void*)(addr2 + jump), p, w);
+        memset((void*)(ADDR[i & 1] + jump), p, w);
+        jump += 80 * (i & 1);
     }
 }
 
 
 void draw_bitmap_fast(Bitmap* bmp, i16 x, i16 y) {
 
-    i32 i;
+    draw_bitmap_region_fast(bmp, 0, 0, bmp->width/4, bmp->height, x, y);
+}
 
+
+void draw_bitmap_region_fast(Bitmap* bmp, i16 sx, i16 sy, i16 sw, 
+    i16 sh, i16 dx, i16 dy) {
+
+    i16 i;
     ulong djump;
     ulong sjump;
-    ulong addr1 = ADDR[y % 2];
-    ulong addr2 = ADDR[(y+1) % 2];
-
     u16 w = bmp->width / 4;
 
-    sjump = 0;
-    for (i = 0; i < bmp->height; i += 2) {
+    djump = (ulong)((dy/2)*80 + dx);
+    sjump = (ulong)(sy*w + sx);
 
-        djump = (ulong)(((y + i)/2)*80 + x);
-        sjump += w;
-        memcpy((void*)(addr1 + djump), (void*)((ulong)bmp->pixels + sjump), w);
+    for (i = dy; i < dy + sh; ++ i) {
 
-        djump += (ulong)((y % 2) * 80);
+        memcpy((void*)(ADDR[i & 1] + djump), 
+               (void*)((ulong)bmp->pixels + sjump), sw);
+
+        djump += 80 * (i & 1);
         sjump += w;
-        memcpy((void*)(addr2 + djump), (void*)((ulong)bmp->pixels + sjump), w);
-    }   
+    }     
+}
+
+
+void draw_text_fast(Bitmap* font, const str text, i16 x, i16 y, bool center) {
+
+    i16 dx, dy;
+    i16 sx, sy;
+    i16 i = 0;
+    i16 d = font->width / 16;
+    char c;
+
+    if (center) {
+
+        x -= strlen(text) * (d / 4);
+    }
+    dx = x;
+    dy = y;
+
+    while ((c = text[i ++]) != '\0') {
+
+        if (c == '\n') {
+
+            dx = x;
+            dy += d;
+            continue;
+        }
+
+        sx = ((i16)c) % 16;
+        sy = ((i16)c) / 16;
+
+        draw_bitmap_region_fast(font, 
+            sx*(d / 4), sy*d, 
+            d / 4, d,
+            dx, dy);
+
+        dx += d / 4;
+    }
 }
 
 

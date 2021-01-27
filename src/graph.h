@@ -21,6 +21,10 @@ void clear_screen(u8 color);
 void fill_rect(i16 x, i16 y, i16 w, i16 h, u8 color);
 
 void draw_bitmap_fast(Bitmap* bmp, i16 x, i16 y);
+void draw_bitmap_region_fast(Bitmap* bmp, i16 sx, i16 sy, i16 sw, 
+    i16 sh, i16 dx, i16 dy);
+
+void draw_text_fast(Bitmap* font, const str text, i16 x, i16 y, bool center);
 
 void vblank();
 
