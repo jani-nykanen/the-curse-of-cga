@@ -2,11 +2,14 @@
 #define __GRAPHICS__
 
 #include "types.h"
+#include "bitmap.h"
+
 
 void init_graphics();
 void reset_graphics();
 
 void clear_screen(u8 color);
+
 
 //
 // Note on drawing functions:
@@ -17,6 +20,9 @@ void clear_screen(u8 color);
 
 void fill_rect(i16 x, i16 y, i16 w, i16 h, u8 color);
 
+void draw_bitmap_fast(Bitmap* bmp, i16 x, i16 y);
+
 void vblank();
+
 
 #endif // __GRAPHICS__

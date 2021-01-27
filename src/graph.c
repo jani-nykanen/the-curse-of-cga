@@ -38,8 +38,10 @@ void init_graphics() {
 
 void reset_graphics() {
 
-    // Is 0 even the default video mode?
-    set_video_mode(0);  
+    const u16 POSSIBLE_DEFAULT_MODE = 2;
+
+    // Is this even the default video mode?
+    set_video_mode(POSSIBLE_DEFAULT_MODE);  
 }
 
 
@@ -69,7 +71,31 @@ void fill_rect(i16 x, i16 y, i16 w, i16 h, u8 color) {
         jump += (ulong)((y % 2) * 80);
         memset((void*)(addr2 + jump), p, w);
     }
+}
 
+
+void draw_bitmap_fast(Bitmap* bmp, i16 x, i16 y) {
+
+    i32 i;
+
+    ulong djump;
+    ulong sjump;
+    ulong addr1 = ADDR[y % 2];
+    ulong addr2 = ADDR[(y+1) % 2];
+
+    u16 w = bmp->width / 4;
+
+    sjump = 0;
+    for (i = 0; i < bmp->height; i += 2) {
+
+        djump = (ulong)(((y + i)/2)*80 + x);
+        sjump += w;
+        memcpy((void*)(addr1 + djump), (void*)((ulong)bmp->pixels + sjump), w);
+
+        djump += (ulong)((y % 2) * 80);
+        sjump += w;
+        memcpy((void*)(addr2 + djump), (void*)((ulong)bmp->pixels + sjump), w);
+    }   
 }
 
 

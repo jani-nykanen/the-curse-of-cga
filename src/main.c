@@ -21,19 +21,15 @@ static void print_errors() {
 
 void main() {
 
-    GameState* state;
-
     init_core();
 
-    state = new_game_state();
-    if (state == NULL) {
+    if (init_game_scene()) {
 
         print_errors();
         return;
     }
 
     core_register_callbacks(
-        (void*)state,
         game_refresh,
         game_redraw);
 

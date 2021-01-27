@@ -8,7 +8,6 @@
 static u16 frameCounter = 0;
 static CoreCallbackRefresh cbRefresh = NULL;
 static CoreCallbackRedraw cbRedraw = NULL;
-static void* cbParam = NULL;
 
 
 static void destroy_core() {
@@ -26,7 +25,7 @@ static bool main_loop(i16 frameSkip) {
     
         if (cbRefresh != NULL) {
 
-            if (cbRefresh(cbParam, frameSkip+1))
+            if (cbRefresh(frameSkip+1))
                 return true;
         }
 
@@ -34,7 +33,7 @@ static bool main_loop(i16 frameSkip) {
 
         if (cbRedraw != NULL) {
 
-            cbRedraw(cbParam);
+            cbRedraw();
         }
     }
     else {
@@ -54,11 +53,9 @@ void init_core() {
 
 
 void core_register_callbacks(
-    void* param,
     CoreCallbackRefresh refresh,
     CoreCallbackRedraw redraw) {
 
-    cbParam = param;
     cbRefresh = refresh;
     cbRedraw = redraw;
 }

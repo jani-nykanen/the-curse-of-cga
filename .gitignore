@@ -1,3 +1,4 @@
 DOSMAZE.*
 *.obj
 *.err
+tools/png2cga

@@ -3,13 +3,12 @@
 
 #include "types.h"
 
-typedef bool (*CoreCallbackRefresh) (void*, i16);
-typedef void (*CoreCallbackRedraw) (void*);
+typedef bool (*CoreCallbackRefresh) (i16);
+typedef void (*CoreCallbackRedraw) (void);
 
 void init_core();
 
 void core_register_callbacks(
-    void* param,
     CoreCallbackRefresh refresh,
     CoreCallbackRedraw redraw);
 
