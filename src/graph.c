@@ -24,6 +24,44 @@ static void set_video_mode(u16 mode) {
 }
 
 
+static void draw_text_base(
+    void (*draw_func) (Bitmap*, i16, i16, i16, i16, i16, i16),
+    Bitmap* font, const str text, i16 x, i16 y, bool center) {
+
+    i16 dx, dy;
+    i16 sx, sy;
+    i16 i = 0;
+    i16 d = font->width / 16;
+    char c;
+
+    if (center) {
+
+        x -= strlen(text) * (d / 4);
+    }
+    dx = x;
+    dy = y;
+
+    while ((c = text[i ++]) != '\0') {
+
+        if (c == '\n') {
+
+            dx = x;
+            dy += d;
+            continue;
+        }
+
+        sx = ((i16)c) % 16;
+        sy = ((i16)c) / 16;
+
+        draw_func(font, 
+            sx*(d / 4), sy*d, 
+            d / 4, d,
+            dx, dy);
+
+        dx += d / 4;
+    }
+}
+
 
 void init_graphics() {
 
@@ -100,38 +138,8 @@ void draw_bitmap_region_fast(Bitmap* bmp,
 
 void draw_text_fast(Bitmap* font, const str text, i16 x, i16 y, bool center) {
 
-    i16 dx, dy;
-    i16 sx, sy;
-    i16 i = 0;
-    i16 d = font->width / 16;
-    char c;
-
-    if (center) {
-
-        x -= strlen(text) * (d / 4);
-    }
-    dx = x;
-    dy = y;
-
-    while ((c = text[i ++]) != '\0') {
-
-        if (c == '\n') {
-
-            dx = x;
-            dy += d;
-            continue;
-        }
-
-        sx = ((i16)c) % 16;
-        sy = ((i16)c) / 16;
-
-        draw_bitmap_region_fast(font, 
-            sx*(d / 4), sy*d, 
-            d / 4, d,
-            dx, dy);
-
-        dx += d / 4;
-    }
+    draw_text_base(draw_bitmap_region_fast,
+        font, text, x, y, center);
 }
 
 
@@ -147,11 +155,11 @@ void draw_bitmap_region(Bitmap* bmp,
 
     u8* out;
 
-    // TODO: We could call _fast method here,
-    // but it does not handle flipping, hence
-    // we just draw nothing right now, if no
-    // mask is provided
-    if (bmp->mask == NULL) return;
+    if (bmp->mask == NULL) {
+
+        draw_bitmap_region_fast(bmp, sx, sy, sw, sh, dx, dy);
+        return;
+    }
 
     djump = (u32)((dy/2)*80 + dx);
     sjump = (u32)(sy*w + sx);
@@ -171,6 +179,13 @@ void draw_bitmap_region(Bitmap* bmp,
         djump += 80 * (y & 1) - sw;
         sjump += w - sw;
     }   
+}
+
+
+void draw_text(Bitmap* font, const str text, i16 x, i16 y, bool center) {
+
+    draw_text_base(draw_bitmap_region,
+        font, text, x, y, center);
 }
 
 

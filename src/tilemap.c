@@ -50,7 +50,7 @@ Tilemap* load_tilemap(const str path) {
             fclose(f);
             return NULL;
         }   
-        fread(tmap->data, 1, tmap->width * tmap->height, f);
+        fread(tmap->data[i], 1, tmap->width * tmap->height, f);
     }
 
     fclose(f);
