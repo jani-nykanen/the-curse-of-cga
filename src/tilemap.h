@@ -18,6 +18,6 @@ typedef struct {
 Tilemap* load_tilemap(const str path);
 void dispose_tilemap(Tilemap* tmap);
 
-i16 tmap_get_tile(Tilemap* tmap, u16 layer, i16 x, i16 y);
+i16 tmap_get_tile(Tilemap* tmap, u16 layer, i16 x, i16 y, i16 def);
 
 #endif // __TILEMAP__

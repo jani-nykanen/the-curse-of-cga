@@ -16,19 +16,58 @@
 // variables for anything, but we might win
 // something here
 //
-static bool cleared = false;
+static bool bgDrawn = false;
 
 static Tilemap* baseMap;
 static Bitmap* bmpFont = NULL;
 static Bitmap* bmpFigure = NULL;
 static Bitmap* bmpTileset = NULL;
+static Bitmap* bmpHUD = NULL;
 
 static Stage* gameStage;
 
 
+static void draw_frame(Bitmap* bmp, i16 x, i16 y, i16 w, i16 h) {
+
+    i16 i;
+    i16 end;
+
+    // Horizontal
+    end = w / 2;
+    for (i = 0; i < end + 2; ++ i) {
+
+        if (i < end) {
+
+            draw_bitmap_region_fast(bmp, 2, 0, 2, 8, x + i*2, y - 8);
+            draw_bitmap_region_fast(bmp, 2, 16, 2, 8, x + i*2, y + h);
+        }
+        draw_bitmap_region_fast(bmp, 2, 8, 2, 8, x + i*2, y + h + 8);
+    }
+
+    // Vertical
+    end = h / 8;
+    for (i = 0; i < end + 1; ++ i) {
+
+        if (i < end) {
+            
+            draw_bitmap_region_fast(bmp, 0, 8, 2, 8, x - 2, y + i*8);
+            draw_bitmap_region_fast(bmp, 4, 8, 2, 8, x + w, y + i*8);
+        }
+        
+        draw_bitmap_region_fast(bmp, 2, 8, 2, 8, x + w + 2, y + i*8);
+    }
+
+    // Corners
+    draw_bitmap_region_fast(bmp, 0, 0, 2, 8, x - 2, y - 8);   
+    draw_bitmap_region_fast(bmp, 4, 0, 2, 8, x + w, y - 8);   
+    draw_bitmap_region_fast(bmp, 0, 16, 2, 8, x - 2, y + h);   
+    draw_bitmap_region_fast(bmp, 4, 16, 2, 8, x + w, y + h);  
+}
+
+
 bool init_game_scene() {
 
-    cleared = false;
+    bgDrawn = false;
 
     if ((baseMap = load_tilemap("ASSETS/MAP.BIN")) == NULL) {
 
@@ -37,7 +76,8 @@ bool init_game_scene() {
 
     if ((bmpFont = load_bitmap("ASSETS/FONT.BIN")) == NULL ||
         (bmpFigure = load_bitmap("ASSETS/FIGURE.BIN")) == NULL ||
-        (bmpTileset = load_bitmap("ASSETS/TILESET.BIN")) == NULL) {
+        (bmpTileset = load_bitmap("ASSETS/TILESET.BIN")) == NULL ||
+        (bmpHUD = load_bitmap("ASSETS/HUD.BIN")) == NULL) {
 
         return true;
     }
@@ -67,15 +107,19 @@ bool game_refresh(i16 step) {
 
 void game_redraw() {
 
-    if (!cleared) {
+    if (!bgDrawn) {
 
-        clear_screen(0);
-        cleared = true;
+        clear_screen(1);
+        draw_frame(bmpHUD, gameStage->xoff, gameStage->yoff,
+            gameStage->roomWidth*4,
+            gameStage->roomHeight*16);
+
+        bgDrawn = true;
     }
 
     stage_draw(gameStage, bmpTileset);
 
-    draw_text(bmpFont, "Hello CGA!", 1, 4, false);
+    //draw_text(bmpFont, "Hello CGA!", 1, 4, false);
 }
 
 
@@ -84,6 +128,7 @@ void dispose_game_scene() {
     dispose_bitmap(bmpFont);
     dispose_bitmap(bmpFigure);
     dispose_bitmap(bmpTileset);
+    dispose_bitmap(bmpHUD);
 
     dispose_tilemap(baseMap);
     

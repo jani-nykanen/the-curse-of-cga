@@ -7,13 +7,23 @@
 
 typedef struct {
 
+    i16 srcx[4];
+    i16 srcy[4];
+
+} TileWallData;
+
+
+typedef struct {
+
     Tilemap* baseMap;
     i16 roomWidth;
     i16 roomHeight;
+    i16 xoff;
     i16 yoff;
     Vector2 camPos;
 
     u8* renderBuffer;
+    TileWallData* wallTiles;
 
 } Stage;
 
