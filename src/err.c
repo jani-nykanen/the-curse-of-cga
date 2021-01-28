@@ -28,7 +28,7 @@ void err_throw_str(const str msg, str param) {
     if (errCount == MAX_ERR_COUNT)
         return;
 
-    snprintf(errorMessages[errCount ++], ERROR_MAX_LENGTH, "%s%s", msg);
+    snprintf(errorMessages[errCount ++], ERROR_MAX_LENGTH, "%s%s", msg, param);
 }
 
 

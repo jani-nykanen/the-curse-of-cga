@@ -4,6 +4,7 @@
 #include "graph.h"
 #include "keyb.h"
 #include "sprite.h"
+#include "tilemap.h"
 
 #include <stdlib.h>
 
@@ -15,6 +16,7 @@
 //
 static bool cleared = false;
 static Vector2 testPos;
+static Tilemap* baseMap;
 static Bitmap* bmpFont = NULL;
 static Bitmap* bmpFigure = NULL;
 static Bitmap* bmpFace = NULL;
@@ -28,6 +30,11 @@ bool init_game_scene() {
     testPos = vec2(160, 100);
     testSpr = create_sprite(4, 16);
     animDir = -1;
+
+    if ((baseMap = load_tilemap("ASSETS/MAP.BIN")) == NULL) {
+
+        return true;
+    }
 
     if ((bmpFont = load_bitmap("ASSETS/FONT.BIN")) == NULL ||
         (bmpFigure = load_bitmap("ASSETS/FIGURE.BIN")) == NULL ||
@@ -111,4 +118,7 @@ void dispose_game_scene() {
 
     dispose_bitmap(bmpFont);
     dispose_bitmap(bmpFigure);
+    dispose_bitmap(bmpFace);
+
+    dispose_tilemap(baseMap);
 }

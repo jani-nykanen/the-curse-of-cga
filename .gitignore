@@ -2,3 +2,4 @@ DOSMAZE.*
 *.obj
 *.err
 tools/png2cga
+tools/tmx2bin

@@ -10,3 +10,13 @@ bitmaps:
 	./tools/png2cga dev/bitmaps/face.png ASSETS/FACE.BIN
 	./tools/png2cga dev/bitmaps/figure.png ASSETS/FIGURE.BIN -mask
 
+.PHONY: tilemaps
+tilemaps:
+	mkdir -p ASSETS
+	./tools/tmx2bin dev/tilemaps/basemap.tmx ASSETS/MAP.BIN
+
+assets: bitmaps tilemaps
+
+.PHONY: tmx2bin
+tmx2bin:
+	(cd tools/src/tmx2bin; go build -o ../../$@)
