@@ -69,7 +69,7 @@ void game_redraw() {
 
     if (!cleared) {
 
-        clear_screen(1);
+        clear_screen(0);
         cleared = true;
     }
 

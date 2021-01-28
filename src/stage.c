@@ -46,12 +46,102 @@ void dispose_stage(Stage* s) {
 
 
 static void stage_draw_wall(Stage* s, Bitmap* bmpTileset,
-    i16 x, i16 y) {
+    i16 dx, i16 dy) {
 
-    draw_bitmap_region_fast(bmpTileset,
-        0, 0, 4, 16, 
-        X_OFF + x*4,
-        s->yoff + y*16);
+    i16 i, x, y;
+    bool neighbourhood[9];
+    i16 srcx[4];
+    i16 srcy[4];
+
+    for (i = 0; i < 4; ++ i) {
+
+        srcx[i] = (i % 2);
+        srcy[i] = (i / 2);
+    }
+
+    for (x = 0; x < 3; ++ x) {
+
+        for (y = 0; y < 3; ++ y) {
+
+            neighbourhood[y * 3 + x] = tmap_get_tile(s->baseMap, 0, dx+x-1, dy+y-1) == 1;
+        }
+    }
+
+    // Bottom
+    if (!neighbourhood[7]) {
+
+        if (neighbourhood[3]) 
+            srcx[2] = 2;
+        if (neighbourhood[5]) 
+            srcx[3] = 2;
+    }
+
+    // Top
+    if (!neighbourhood[1]) {
+
+        if (neighbourhood[3]) 
+            srcx[0] = 2;
+        if (neighbourhood[5]) 
+            srcx[1] = 2;
+    }
+
+    // Right
+    if (!neighbourhood[5]) {
+
+        srcy[1] = 1;
+        srcy[3] = 1;
+
+        srcx[1] = 3;
+        srcx[3] = 3;
+
+        if (!neighbourhood[1]) {
+
+            srcy[1] = 0;
+            srcx[1] = 1;
+        }
+
+        if (!neighbourhood[7]) {
+
+            srcy[3] = 1;
+            srcx[3] = 1;
+        }
+    }
+
+    // Left
+    if (!neighbourhood[5]) {
+
+        srcy[0] = 0;
+        srcy[2] = 0;
+
+        srcx[0] = 3;
+        srcx[2] = 3;
+
+        if (!neighbourhood[1]) {
+
+            srcy[0] = 0;
+            srcx[0] = 0;
+        }
+
+        if (!neighbourhood[7]) {
+
+            srcy[2] = 1;
+            srcx[2] = 0;
+        }
+    }
+
+
+    for (y = 0; y < 2; ++ y) {
+
+        for (x = 0; x < 2; ++ x) {
+
+            i = y * 2 + x;
+
+            draw_bitmap_region_fast(bmpTileset,
+                srcx[i] * 2, srcy[i] * 8, 2, 8, 
+                X_OFF + dx*4 + x*2,
+                s->yoff + dy*16 + y*8);
+        }
+    }
 }
 
 

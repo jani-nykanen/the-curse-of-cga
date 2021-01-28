@@ -81,7 +81,10 @@ void dispose_tilemap(Tilemap* tmap) {
 
 i16 tmap_get_tile(Tilemap* tmap, u16 layer, i16 x, i16 y) {
 
-    if (layer >= tmap->layerCount) return -1;
+    if (layer >= tmap->layerCount || 
+        x < 0 || x >= tmap->width ||
+        y < 0 || y >= tmap->height) 
+        return -1;
 
     return (i16)tmap->data[layer][y * tmap->width + x];
 }
