@@ -1,7 +1,7 @@
 #ifndef __KEYB__
 #define __KEYB__
 
-#include "keycode.h"
+#include "keycodes.h"
 #include "types.h"
 
 typedef enum {

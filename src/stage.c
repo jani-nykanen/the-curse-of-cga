@@ -236,6 +236,45 @@ void stage_draw(Stage* s, Bitmap* bmpTileset) {
             index = y * s->roomWidth + x;
             if (!s->renderBuffer[index])
                 continue;
+            // s->renderBuffer[index] = false;
+
+            tid = get_tile(s, x, y, -1);
+            if (tid < 0) continue;
+
+            switch (tid) {
+
+            case 1:
+
+                stage_draw_wall(s, bmpTileset, x, y);
+                break;
+            
+            default:
+                draw_bitmap_region_fast(bmpTileset,
+                        16, 0, 4, 16, 
+                        s->xoff + x*4,
+                        s->yoff + y*16);
+                break;
+            }
+        }
+    }
+}
+
+
+// We draw objects in a separate loop since
+// they might - and do - overlay static tiles
+void stage_draw_objects(Stage* s, Bitmap* bmpObjects) {
+
+    i16 x, y;
+    i16 index;
+    i16 tid;
+
+    for (y = 0; y < s->roomHeight; ++ y) {
+
+        for (x = 0; x < s->roomWidth; ++ x) {
+
+            index = y * s->roomWidth + x;
+            if (!s->renderBuffer[index])
+                continue;
             s->renderBuffer[index] = false;
 
             tid = get_tile(s, x, y, -1);
@@ -243,17 +282,12 @@ void stage_draw(Stage* s, Bitmap* bmpTileset) {
 
             switch (tid) {
 
-            case 0:
+            case 2:
 
-                draw_bitmap_region_fast(bmpTileset,
-                    16, 0, 4, 16, 
+                draw_bitmap_region(bmpObjects,
+                    0, 0, 4, 16, 
                     s->xoff + x*4,
                     s->yoff + y*16);
-                break;
-
-            case 1:
-
-                stage_draw_wall(s, bmpTileset, x, y);
                 break;
             
             default:

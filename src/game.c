@@ -24,6 +24,7 @@ static Bitmap* bmpFont = NULL;
 static Bitmap* bmpFigure = NULL;
 static Bitmap* bmpTileset = NULL;
 static Bitmap* bmpHUD = NULL;
+static Bitmap* bmpObjects = NULL;
 
 static Stage* gameStage;
 static Player* player;
@@ -79,7 +80,8 @@ bool init_game_scene() {
     if ((bmpFont = load_bitmap("ASSETS/FONT.BIN")) == NULL ||
         (bmpFigure = load_bitmap("ASSETS/FIGURE.BIN")) == NULL ||
         (bmpTileset = load_bitmap("ASSETS/TILESET.BIN")) == NULL ||
-        (bmpHUD = load_bitmap("ASSETS/HUD.BIN")) == NULL) {
+        (bmpHUD = load_bitmap("ASSETS/HUD.BIN")) == NULL ||
+        (bmpObjects = load_bitmap("ASSETS/OBJECTS.BIN")) == NULL) {
 
         return true;
     }
@@ -126,6 +128,7 @@ void game_redraw() {
 
     pl_update_stage_tile_buffer(player, gameStage);
     stage_draw(gameStage, bmpTileset);
+    stage_draw_objects(gameStage, bmpObjects);
 
     toggle_clipping(true);
     set_clip_rectangle(
@@ -137,8 +140,6 @@ void game_redraw() {
     pl_draw(player, bmpFigure);
 
     toggle_clipping(false);
-
-    //draw_text(bmpFont, "Hello CGA!", 1, 4, false);
 }
 
 
@@ -148,6 +149,7 @@ void dispose_game_scene() {
     dispose_bitmap(bmpFigure);
     dispose_bitmap(bmpTileset);
     dispose_bitmap(bmpHUD);
+    dispose_bitmap(bmpObjects);
 
     dispose_tilemap(baseMap);
     

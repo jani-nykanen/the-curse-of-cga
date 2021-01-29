@@ -34,6 +34,7 @@ Stage* new_stage(Tilemap* baseMap,
 void dispose_stage(Stage* s);
 
 void stage_draw(Stage* s, Bitmap* bmpTileset);
+void stage_draw_objects(Stage* s, Bitmap* bmpObjects);
 
 void stage_mark_tile_for_redraw(Stage* s, i16 x, i16 y);
 
