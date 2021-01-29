@@ -103,6 +103,7 @@ bool init_game_scene() {
 bool game_refresh(i16 step) {
 
     pl_update(player, gameStage, step);
+    stage_update(gameStage, step);
 
     if (keyb_get_normal_key(KEY_Q) == STATE_PRESSED &&
         (keyb_get_normal_key(KEY_LCTRL) & STATE_DOWN_OR_PRESSED)) {

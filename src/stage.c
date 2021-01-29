@@ -189,6 +189,7 @@ Stage* new_stage(Tilemap* baseMap,
     s->wallTiles = (TileWallData*) malloc(sizeof(TileWallData) * roomWidth * roomHeight);
     if (s->wallTiles == NULL) {
 
+        ERR_MALLOC();
         dispose_stage(s);
         return NULL;
     }
@@ -196,6 +197,8 @@ Stage* new_stage(Tilemap* baseMap,
 
     s->yoff = 100 - roomHeight*8;
     s->xoff = 30 - roomWidth*2;
+
+    s->rockAnim.timer = 0;
 
     return s;
 }
@@ -213,6 +216,33 @@ void dispose_stage(Stage* s) {
         free(s->roomTiles);
 
     free(s);
+}
+
+
+void stage_update(Stage* s, i16 step) {
+
+    i16 moveStep;
+    i16 delta;
+
+    if (s->rockAnim.timer > 0) {
+
+        stage_mark_tile_for_redraw(s, 
+                s->rockAnim.pos.x, 
+                s->rockAnim.pos.y);
+        stage_mark_tile_for_redraw(s, 
+                s->rockAnim.target.x, 
+                s->rockAnim.target.y);
+
+        s->rockAnim.timer -= step;
+
+        moveStep = s->rockAnim.startTime / 4;
+        delta = 4 - fixed_round(s->rockAnim.timer, moveStep);
+
+        s->rockAnim.rpos.x = s->rockAnim.pos.x * 4 + 
+            (s->rockAnim.target.x - s->rockAnim.pos.x) * delta;
+        s->rockAnim.rpos.y = s->rockAnim.pos.y * 16 + 
+            (s->rockAnim.target.y - s->rockAnim.pos.y) * delta * 4;
+    }
 }
 
 
@@ -298,16 +328,30 @@ void stage_draw_objects(Stage* s, Bitmap* bmpObjects) {
 
             case 2:
 
-                draw_bitmap_region(bmpObjects,
-                    0, 0, 4, 16, 
-                    s->xoff + x*4,
-                    s->yoff + y*16);
+                if (s->rockAnim.timer <= 0 ||
+                    s->rockAnim.target.x != x ||
+                    s->rockAnim.target.y != y) {
+
+                    draw_bitmap_region(bmpObjects,
+                        0, 0, 4, 16, 
+                        s->xoff + x*4,
+                        s->yoff + y*16);
+                }
+
                 break;
             
             default:
                 break;
             }
         }
+    }
+
+    if (s->rockAnim.timer > 0) {
+
+        draw_bitmap_region(bmpObjects,
+            0, 0, 4, 16, 
+            s->xoff + s->rockAnim.rpos.x,
+            s->yoff + s->rockAnim.rpos.y);
     }
 }
 
@@ -329,7 +373,8 @@ bool stage_is_tile_solid(Stage* s, i16 x, i16 y) {
 }
 
 
-bool stage_movement_collision(Stage* s, i16 x, i16 y, i16 dx, i16 dy) {
+bool stage_movement_collision(Stage* s, i16 x, i16 y, 
+    i16 dx, i16 dy, i16 objectMoveTime) {
 
     i16 id = get_tile(s, x, y, 0);
     i16 mid;
@@ -343,11 +388,17 @@ bool stage_movement_collision(Stage* s, i16 x, i16 y, i16 dx, i16 dy) {
     // Rock
     case 2:
 
-        mid = get_tile(s, x+dx, y+dy, 0);
+        mid = get_tile(s, x+dx, y+dy, 1);
         if (mid == 0) {
 
             set_tile(s, x, y, 0);
             set_tile(s, x+dx, y+dy, 2);
+
+            s->rockAnim.pos = vec2(x, y);
+            s->rockAnim.target = vec2(x+dx, y+dy);
+            s->rockAnim.startTime = objectMoveTime;
+            s->rockAnim.timer = objectMoveTime;
+
             return false;
         }
         return true;

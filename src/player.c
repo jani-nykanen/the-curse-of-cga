@@ -61,7 +61,8 @@ static void pl_control(Player* pl, Stage* s, i16 step) {
     }
 
     if ((dx != 0 || dy != 0) &&
-        !stage_movement_collision(s, pl->pos.x + dx, pl->pos.y + dy, dx, dy)) {
+        !stage_movement_collision(s, pl->pos.x + dx, pl->pos.y + dy, 
+            dx, dy, MOVE_TIME)) {
 
         pl->target.x = pl->pos.x + dx;
         pl->target.y = pl->pos.y + dy;
