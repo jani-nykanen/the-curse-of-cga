@@ -33,12 +33,15 @@ Stage* new_stage(Tilemap* baseMap,
     i16 roomWidth, i16 roomHeight, i16 camX, i16 camY);
 void dispose_stage(Stage* s);
 
+void stage_update(Stage* s, i16 step);
+
 void stage_draw(Stage* s, Bitmap* bmpTileset);
 void stage_draw_objects(Stage* s, Bitmap* bmpObjects);
 
 void stage_mark_tile_for_redraw(Stage* s, i16 x, i16 y);
 
 bool stage_is_tile_solid(Stage* s, i16 x, i16 y);
+bool stage_movement_collision(Stage* s, i16 x, i16 y, i16 dx, i16 dy);
 bool stage_check_camera_transition(Stage* s, i16 x, i16 y);
 
 #endif // __STAGE__

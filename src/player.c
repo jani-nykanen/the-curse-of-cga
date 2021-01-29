@@ -61,7 +61,7 @@ static void pl_control(Player* pl, Stage* s, i16 step) {
     }
 
     if ((dx != 0 || dy != 0) &&
-        !stage_is_tile_solid(s, pl->pos.x + dx, pl->pos.y + dy)) {
+        !stage_movement_collision(s, pl->pos.x + dx, pl->pos.y + dy, dx, dy)) {
 
         pl->target.x = pl->pos.x + dx;
         pl->target.y = pl->pos.y + dy;
@@ -154,7 +154,7 @@ void pl_update(Player* pl, Stage* s, i16 step) {
 
 void pl_draw(Player* pl, Bitmap* bmpPlayer) {
 
-    const i16 Y_OFF = -4;
+    const i16 Y_OFF = -2;
 
     draw_sprite(&pl->spr, bmpPlayer, pl->rpos.x, pl->rpos.y + Y_OFF);
 }

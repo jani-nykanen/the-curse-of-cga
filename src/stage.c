@@ -18,6 +18,20 @@ static i16 get_tile(Stage* s, i16 x, i16 y, i16 def) {
 }
 
 
+static void set_tile(Stage* s, i16 x, i16 y, i16 v) {
+
+    i16 i;
+
+    if (x < 0 || y < 0 || x >= s->roomWidth || y >= s->roomHeight)
+        return;
+
+    i = y * s->roomWidth + x;
+
+    s->renderBuffer[i] = true;
+    s->roomTiles[i] = v;
+}
+
+
 static TileWallData gen_tile_wall_data(Stage* s, i16 dx, i16 dy) {
 
     TileWallData t;
@@ -312,6 +326,37 @@ bool stage_is_tile_solid(Stage* s, i16 x, i16 y) {
     return tmap_get_tile(s->baseMap, 0, 
         s->camPos.x + x, 
         s->camPos.y + y, 1) == 1;
+}
+
+
+bool stage_movement_collision(Stage* s, i16 x, i16 y, i16 dx, i16 dy) {
+
+    i16 id = get_tile(s, x, y, 0);
+    i16 mid;
+
+    switch (id) {
+
+    // Wall
+    case 1:
+        return true;
+
+    // Rock
+    case 2:
+
+        mid = get_tile(s, x+dx, y+dy, 0);
+        if (mid == 0) {
+
+            set_tile(s, x, y, 0);
+            set_tile(s, x+dx, y+dy, 2);
+            return false;
+        }
+        return true;
+
+    default:
+        break;
+    }
+
+    return false;
 }
 
 
