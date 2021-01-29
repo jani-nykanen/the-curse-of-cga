@@ -14,6 +14,9 @@ static const u32 CGA_ODD = 0xB8002000L;
 // For rendering
 static u32 ADDR[2];
 
+static bool clippingEnabled = false;
+static i16 clipArea[4];
+
 
 static void set_video_mode(u16 mode) {
 
@@ -22,6 +25,47 @@ static void set_video_mode(u16 mode) {
     in.h.al = mode;
     int86(0x10, &in, &out);
 }
+
+
+static bool clip_rect_region(
+    i16* sx, i16* sy, i16* sw, i16* sh, 
+    i16* dx, i16* dy) {
+
+    i16 ow, oh;
+
+    // Left
+    ow = *sw;
+    if(*dx < clipArea[0]) {
+
+        *sw -= clipArea[0] - (*dx);
+        *sx += ow-*sw;
+        *dx = clipArea[0];
+    }
+    
+    // Right
+    if(*dx+*sw >= clipArea[0] + clipArea[2]) {
+
+         *sw -= (*dx+*sw) - (clipArea[0] + clipArea[2]); 
+    }
+
+    // Top
+    oh = *sh;
+    if(*dy < clipArea[1]) {
+
+        *sh -= clipArea[1] - (*dy);
+        *sy += oh-*sh;
+        *dy = clipArea[1];
+    }
+    
+    // Bottom
+    if(*dy+*sh >= clipArea[1] + clipArea[3]) {
+
+        *sh -= (*dy+*sh) - (clipArea[1] + clipArea[3]);
+    }
+
+    return *sw > 0 && *sh > 0;
+}
+
 
 
 static void draw_text_base(
@@ -71,6 +115,12 @@ void init_graphics() {
 
     ADDR[0] = CGA_EVEN;
     ADDR[1] = CGA_ODD;
+
+    clippingEnabled = false;
+    clipArea[0] = 0;
+    clipArea[1] = 0;
+    clipArea[2] = 80;
+    clipArea[3] = 200;
 }
 
 
@@ -125,6 +175,9 @@ void draw_bitmap_region_fast(Bitmap* bmp,
     djump = (u32)((dy/2)*80 + dx);
     sjump = (u32)(sy*w + sx);
 
+    if (clippingEnabled && !clip_rect_region(&sx, &sy, &sw, &sh, &dx, &dy))
+        return;
+
     for (i = dy; i < dy + sh; ++ i) {
 
         memcpy((void*)(ADDR[i & 1] + djump), 
@@ -154,6 +207,9 @@ void draw_bitmap_region(Bitmap* bmp,
     u8 mask;
 
     u8* out;
+
+    if (clippingEnabled && !clip_rect_region(&sx, &sy, &sw, &sh, &dx, &dy))
+        return;
 
     if (bmp->mask == NULL) {
 
@@ -201,4 +257,19 @@ void vblank() {
 
     while (inp(0x3DA) & 8);
     while (!(inp(0x3DA) & 8));
+}
+
+
+void toggle_clipping(bool state) {
+
+    clippingEnabled = state;
+}
+
+
+void set_clip_rectangle(i16 x, i16 y, i16 w, i16 h) {
+
+    clipArea[0] = x;
+    clipArea[1] = y;
+    clipArea[2] = w;
+    clipArea[3] = h;
 }

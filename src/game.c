@@ -127,7 +127,16 @@ void game_redraw() {
     pl_update_stage_tile_buffer(player, gameStage);
     stage_draw(gameStage, bmpTileset);
 
+    toggle_clipping(true);
+    set_clip_rectangle(
+        gameStage->xoff, 
+        gameStage->yoff,
+        gameStage->roomWidth * 4, 
+        gameStage->roomHeight*16);
+
     pl_draw(player, bmpFigure);
+
+    toggle_clipping(false);
 
     //draw_text(bmpFont, "Hello CGA!", 1, 4, false);
 }

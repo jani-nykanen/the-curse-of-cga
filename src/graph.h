@@ -36,5 +36,7 @@ void draw_sprite(Sprite* spr, Bitmap* bmp, i16 x, i16 y);
 
 void vblank();
 
+void toggle_clipping(bool state);
+void set_clip_rectangle(i16 x, i16 y, i16 w, i16 h);
 
 #endif // __GRAPHICS__

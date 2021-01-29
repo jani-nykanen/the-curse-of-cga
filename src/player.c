@@ -60,21 +60,8 @@ static void pl_control(Player* pl, Stage* s, i16 step) {
         dy = -1;
     }
 
-    if ((dx != 0 || dy != 0)) {
-
-        if (stage_check_camera_transition(s,
-            pl->pos.x + dx, pl->target.y + dy)) {
-
-            pl->pos.x -= dx * (s->roomWidth-1);
-            pl->pos.y -= dy * (s->roomHeight-1);    
-
-            pl->target = pl->pos;
-
-            return;
-        }
-
-        if (stage_is_tile_solid(s, pl->pos.x + dx, pl->pos.y + dy))
-            return;
+    if ((dx != 0 || dy != 0) &&
+        !stage_is_tile_solid(s, pl->pos.x + dx, pl->pos.y + dy)) {
 
         pl->target.x = pl->pos.x + dx;
         pl->target.y = pl->pos.y + dy;
@@ -88,26 +75,53 @@ static void pl_control(Player* pl, Stage* s, i16 step) {
 }
 
 
+static void pl_check_camera(Player* pl, Stage* s) {
+
+    i16 dx, dy;
+
+    if (stage_check_camera_transition(s,
+        pl->target.x, pl->target.y)) {
+
+        dx = (pl->target.x - pl->pos.x) * (s->roomWidth);
+        dy = (pl->target.y - pl->pos.y) * (s->roomHeight); 
+
+        pl->pos.x -= dx;
+        pl->pos.y -= dy;    
+
+        pl->target.x -= dx;
+        pl->target.y -= dy;
+
+        pl_compute_render_pos(pl, s);
+    }
+}
+
+
 static void pl_move(Player* pl, Stage* s, i16 step) {
 
     i16 moveStep = MOVE_TIME / 4;
     i16 delta;
+    i16 oldTime;
     
     if (!pl->moving) return;
 
+    oldTime = pl->moveTimer;
     if ((pl->moveTimer -= step) <= 0) {
 
         pl->moving = false;
         pl->pos = pl->target;
-        pl->rpos = vec2(s->xoff + pl->pos.x * 4, s->yoff + pl->pos.y*16);
+        pl_compute_render_pos(pl, s);
 
         return;
+    }
+
+    if (oldTime >= MOVE_TIME/2 && pl->moveTimer < MOVE_TIME/2) {
+
+        pl_check_camera(pl, s);
     }
 
     delta = 4 - fixed_round(pl->moveTimer, moveStep);
     pl->rpos.x += pl->dir.x * delta;
     pl->rpos.y += pl->dir.y * delta * 4;
-
     
 }
 

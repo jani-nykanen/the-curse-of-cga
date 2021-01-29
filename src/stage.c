@@ -275,12 +275,9 @@ void stage_mark_tile_for_redraw(Stage* s, i16 x, i16 y) {
 
 bool stage_is_tile_solid(Stage* s, i16 x, i16 y) {
 
-    if (x < 0 || y < 0 || 
-        x >= s->roomWidth || 
-        y >= s->roomHeight)
-        return true;
-
-    return get_tile(s, x, y, 1) == 1;
+    return tmap_get_tile(s->baseMap, 0, 
+        s->camPos.x + x, 
+        s->camPos.y + y, 1) == 1;
 }
 
 
