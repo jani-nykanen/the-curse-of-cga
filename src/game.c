@@ -7,6 +7,7 @@
 #include "tilemap.h"
 #include "stage.h"
 #include "util.h"
+#include "player.h"
 
 #include <stdlib.h>
 
@@ -25,6 +26,7 @@ static Bitmap* bmpTileset = NULL;
 static Bitmap* bmpHUD = NULL;
 
 static Stage* gameStage;
+static Player* player;
 
 
 static void draw_frame(Bitmap* bmp, i16 x, i16 y, i16 w, i16 h) {
@@ -88,12 +90,17 @@ bool init_game_scene() {
         return true;
     }
 
+    alloc_object(player, Player, true);
+    *player = create_player(1, 1, gameStage);
+
     return false;
 }
 
 
 
 bool game_refresh(i16 step) {
+
+    pl_update(player, gameStage, step);
 
     if (keyb_get_normal_key(KEY_Q) == STATE_PRESSED &&
         (keyb_get_normal_key(KEY_LCTRL) & STATE_DOWN_OR_PRESSED)) {
@@ -117,7 +124,10 @@ void game_redraw() {
         bgDrawn = true;
     }
 
+    pl_update_stage_tile_buffer(player, gameStage);
     stage_draw(gameStage, bmpTileset);
+
+    pl_draw(player, bmpFigure);
 
     //draw_text(bmpFont, "Hello CGA!", 1, 4, false);
 }
@@ -133,4 +143,6 @@ void dispose_game_scene() {
     dispose_tilemap(baseMap);
     
     dispose_stage(gameStage);
+
+    free(player);
 }

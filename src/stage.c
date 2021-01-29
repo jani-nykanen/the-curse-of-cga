@@ -122,7 +122,18 @@ static void gen_wall_tile_map(Stage* s) {
 
         for (x = 0; x < s->roomWidth; ++ x) {
 
-            s->wallTiles[y * s->roomWidth + x] = gen_tile_wall_data(s, x, y);
+            switch (tmap_get_tile(s->baseMap, 0, s->camPos.x + x, s->camPos.y + y, 1)) {
+
+            case 1:
+                s->wallTiles[y * s->roomWidth + x] = gen_tile_wall_data(s, x, y);
+                break;
+            
+            default:
+
+
+
+                break;
+            }
         }
     }
 }
@@ -234,4 +245,24 @@ void stage_draw(Stage* s, Bitmap* bmpTileset) {
             }
         }
     }
+}
+
+
+void stage_mark_tile_for_redraw(Stage* s, i16 x, i16 y) {
+
+    if (x < 0 || y < 0 || x >= s->roomWidth || y >= s->roomHeight)
+        return;
+
+    s->renderBuffer[y * s->roomWidth + x] = true;
+}
+
+
+bool stage_is_tile_solid(Stage* s, i16 x, i16 y) {
+
+    if (x < 0 || y < 0 || 
+        x >= s->baseMap->width || 
+        y >= s->baseMap->height)
+        return true;
+
+    return tmap_get_tile(s->baseMap, 0, x, y, 1) == 1;
 }
