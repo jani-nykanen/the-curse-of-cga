@@ -144,5 +144,6 @@ void dispose_game_scene() {
     
     dispose_stage(gameStage);
 
-    free(player);
+    if (player != NULL)
+        free(player);
 }

@@ -9,6 +9,15 @@
 #include <string.h>
 
 
+static i16 get_tile(Stage* s, i16 x, i16 y, i16 def) {
+
+    if (x < 0 || y < 0 || x >= s->roomWidth || y >= s->roomHeight)
+        return def;
+
+    return s->roomTiles[y * s->roomWidth + x];
+}
+
+
 static TileWallData gen_tile_wall_data(Stage* s, i16 dx, i16 dy) {
 
     TileWallData t;
@@ -26,7 +35,7 @@ static TileWallData gen_tile_wall_data(Stage* s, i16 dx, i16 dy) {
 
         for (y = 0; y < 3; ++ y) {
 
-            neighbourhood[y * 3 + x] = tmap_get_tile(s->baseMap, 0, dx+x-1, dy+y-1, 1) == 1;
+            neighbourhood[y * 3 + x] = get_tile(s, dx+x-1, dy+y-1, 1) == 1;
         }
     }
 
@@ -122,22 +131,18 @@ static void gen_wall_tile_map(Stage* s) {
 
         for (x = 0; x < s->roomWidth; ++ x) {
 
-            switch (tmap_get_tile(s->baseMap, 0, s->camPos.x + x, s->camPos.y + y, 1)) {
+            switch (get_tile(s, x, y, 1)) {
 
             case 1:
                 s->wallTiles[y * s->roomWidth + x] = gen_tile_wall_data(s, x, y);
                 break;
             
             default:
-
-
-
                 break;
             }
         }
     }
 }
-
 
 
 Stage* new_stage(Tilemap* baseMap, 
@@ -157,6 +162,15 @@ Stage* new_stage(Tilemap* baseMap,
     s->roomWidth = roomWidth;
     s->roomHeight = roomHeight;
     s->camPos = vec2(camX, camY);
+
+    s->roomTiles = (i16*)malloc(sizeof(i16) * roomWidth * roomHeight);
+    if (s->roomTiles == NULL) {
+
+        dispose_stage(s);
+        return NULL;
+    }
+    tmap_clone_area_i16(baseMap, s->roomTiles,
+        0, camX, camY, roomWidth, roomHeight);
 
     s->wallTiles = (TileWallData*) malloc(sizeof(TileWallData) * roomWidth * roomHeight);
     if (s->wallTiles == NULL) {
@@ -181,6 +195,8 @@ void dispose_stage(Stage* s) {
         free(s->renderBuffer);
     if (s->wallTiles != NULL)
         free(s->wallTiles);
+    if (s->roomTiles != NULL)
+        free(s->roomTiles);
 
     free(s);
 }
@@ -213,16 +229,16 @@ void stage_draw(Stage* s, Bitmap* bmpTileset) {
     i16 index;
     i16 tid;
 
-    for (y = 0; y < s->baseMap->height; ++ y) {
+    for (y = 0; y < s->roomHeight; ++ y) {
 
-        for (x = 0; x < s->baseMap->width; ++ x) {
+        for (x = 0; x < s->roomWidth; ++ x) {
 
             index = y * s->roomWidth + x;
             if (!s->renderBuffer[index])
                 continue;
             s->renderBuffer[index] = false;
 
-            tid = tmap_get_tile(s->baseMap, 0, x, y, -1);
+            tid = get_tile(s, x, y, -1);
             if (tid < 0) continue;
 
             switch (tid) {
@@ -260,9 +276,39 @@ void stage_mark_tile_for_redraw(Stage* s, i16 x, i16 y) {
 bool stage_is_tile_solid(Stage* s, i16 x, i16 y) {
 
     if (x < 0 || y < 0 || 
-        x >= s->baseMap->width || 
-        y >= s->baseMap->height)
+        x >= s->roomWidth || 
+        y >= s->roomHeight)
         return true;
 
-    return tmap_get_tile(s->baseMap, 0, x, y, 1) == 1;
+    return get_tile(s, x, y, 1) == 1;
+}
+
+
+bool stage_check_camera_transition(Stage* s, i16 x, i16 y) {
+
+    const i16 JUMP_X[4] = {1, 0, -1, 0};
+    const i16 JUMP_Y[4] = {0, -1, 0, 1};
+
+    i16 dir = 0;
+    if (x >= s->roomWidth) dir = 1;
+    if (y < 0) dir = 2;
+    if (x < 0) dir = 3;
+    if (y >= s->roomHeight) dir = 4;
+
+    if (dir != 0) {
+
+        s->camPos.x += JUMP_X[dir-1] * s->roomWidth;
+        s->camPos.y += JUMP_Y[dir-1] * s->roomHeight;
+
+        tmap_clone_area_i16(s->baseMap, 
+            s->roomTiles, 0, 
+            s->camPos.x, s->camPos.y, 
+            s->roomWidth, s->roomHeight);
+        gen_wall_tile_map(s);
+
+        memset(s->renderBuffer, 1, s->roomWidth * s->roomHeight);
+
+        return true;
+    }
+    return false;
 }

@@ -26,6 +26,12 @@ Player create_player(i16 x, i16 y, Stage* s) {
 }
 
 
+static void pl_compute_render_pos(Player* pl, Stage* s) {
+
+    pl->rpos = vec2(s->xoff + pl->pos.x * 4, s->yoff + pl->pos.y*16);
+}
+
+
 static void pl_control(Player* pl, Stage* s, i16 step) {
 
     i16 dx = 0;
@@ -54,8 +60,21 @@ static void pl_control(Player* pl, Stage* s, i16 step) {
         dy = -1;
     }
 
-    if ((dx != 0 || dy != 0) &&
-        !stage_is_tile_solid(s, pl->pos.x + dx, pl->pos.y + dy)) {
+    if ((dx != 0 || dy != 0)) {
+
+        if (stage_check_camera_transition(s,
+            pl->pos.x + dx, pl->target.y + dy)) {
+
+            pl->pos.x -= dx * (s->roomWidth-1);
+            pl->pos.y -= dy * (s->roomHeight-1);    
+
+            pl->target = pl->pos;
+
+            return;
+        }
+
+        if (stage_is_tile_solid(s, pl->pos.x + dx, pl->pos.y + dy))
+            return;
 
         pl->target.x = pl->pos.x + dx;
         pl->target.y = pl->pos.y + dy;
@@ -108,11 +127,12 @@ static void pl_animate(Player* pl, i16 step) {
 }
 
 
+
 void pl_update(Player* pl, Stage* s, i16 step) {
     
-    pl->rpos = vec2(s->xoff + pl->pos.x * 4, s->yoff + pl->pos.y*16);
-
     pl_control(pl, s, step);
+    pl_compute_render_pos(pl, s);
+
     pl_animate(pl, step);
     pl_move(pl, s, step);
 }

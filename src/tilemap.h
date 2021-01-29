@@ -20,4 +20,7 @@ void dispose_tilemap(Tilemap* tmap);
 
 i16 tmap_get_tile(Tilemap* tmap, u16 layer, i16 x, i16 y, i16 def);
 
+void tmap_clone_area_i16(Tilemap* tmap, i16* out,
+    u16 layer, i16 x, i16 y, i16 w, i16 h);
+
 #endif // __TILEMAP__
