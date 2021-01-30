@@ -11,6 +11,18 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+
+
+static const i16 MAP_X = 80-19;
+static const i16 MAP_Y = 77;
+// TODO: In future, fetch the following info
+// from the base map itself
+static const i16 ROOM_COUNT_X = 5;
+static const i16 ROOM_COUNT_Y = 6;
+static const i16 MAP_WIDTH = 15;
+static const i16 MAP_HEIGHT = 48;
+
 
 
 //
@@ -19,6 +31,7 @@
 // something here
 //
 static bool bgDrawn = false;
+static bool mapDrawn = false;
 
 static Tilemap* baseMap;
 static Bitmap* bmpFont = NULL;
@@ -31,14 +44,17 @@ static Bitmap* bmpLogo = NULL;
 static Stage* gameStage;
 static Player* player;
 
+static u8* visitedRooms;
 
-static void draw_frame(Bitmap* bmp, i16 x, i16 y, i16 w, i16 h, i16 xshift, bool drawShadow) {
+
+static void draw_frame(Bitmap* bmp, i16 x, i16 y, i16 w, i16 h, 
+    i16 xshift, i16 wextra, bool drawShadow) {
 
     i16 i;
     i16 end;
 
     // Horizontal
-    end = w / 2;
+    end = w / 2 + wextra;
     for (i = 0; i < end + ((i16)drawShadow) * 2; ++ i) {
 
         if (i < end) {
@@ -73,9 +89,19 @@ static void draw_frame(Bitmap* bmp, i16 x, i16 y, i16 w, i16 h, i16 xshift, bool
 }
 
 
+static void mark_room_visited() {
+
+    i16 cx = gameStage->camPos.x / gameStage->roomWidth;
+    i16 cy = gameStage->camPos.y / gameStage->roomHeight;
+
+    visitedRooms[cy * ROOM_COUNT_X + cx] = true;
+}
+
+
 bool init_game_scene() {
 
     bgDrawn = false;
+    mapDrawn = false;
 
     if ((baseMap = load_tilemap("ASSETS/MAP.BIN")) == NULL) {
 
@@ -101,14 +127,25 @@ bool init_game_scene() {
     alloc_object(player, Player, true);
     *player = create_player(1, 1, gameStage);
 
+    visitedRooms = (u8*)malloc(ROOM_COUNT_X * ROOM_COUNT_Y);
+    if (visitedRooms == NULL) {
+
+        return true;
+    }
+    memset(visitedRooms, 0, ROOM_COUNT_X * ROOM_COUNT_Y);
+    mark_room_visited();
+
     return false;
 }
 
 
-
 bool game_refresh(i16 step) {
 
-    pl_update(player, gameStage, step);
+    if (pl_update(player, gameStage, step)) {
+
+        mark_room_visited();
+        mapDrawn = false;
+    }
     stage_update(gameStage, step);
 
     if (keyb_get_normal_key(KEY_Q) == STATE_PRESSED &&
@@ -121,13 +158,49 @@ bool game_refresh(i16 step) {
 }
 
 
+static void draw_map_frame(i16 x, i16 y) {
+
+
+    draw_frame(bmpHUD, x, y, MAP_WIDTH, MAP_HEIGHT, 6, 1, false);
+    fill_rect(x, y, MAP_WIDTH, MAP_HEIGHT, 0);
+
+    draw_text(bmpFont, "MAP:", 80-11, y-15, true);
+}
+
+
 static void draw_map(i16 x, i16 y) {
 
-    const i16 WIDTH = 16;
-    const i16 HEIGHT = 56;
+    const i16 ROOM_WIDTH = 3;
+    const i16 ROOM_HEIGHT = 8;
 
-    draw_frame(bmpHUD, x, y, WIDTH, HEIGHT, 6, false);
-    fill_rect(x, y, WIDTH, HEIGHT, 0);
+    i16 dx, dy;
+    i16 sy;
+
+    i16 cx = gameStage->camPos.x / gameStage->roomWidth;
+    i16 cy = gameStage->camPos.y / gameStage->roomHeight;
+
+    for (dy = 0; dy < ROOM_COUNT_Y; ++ dy) {
+
+        for (dx = 0; dx < ROOM_COUNT_X; ++ dx) {
+
+            if (!visitedRooms[dy * ROOM_COUNT_X + dx])
+                continue;
+
+            if (dx == cx && dy == cy) {
+
+                sy = 0;
+            }
+            else {
+
+                sy = 8;
+            }
+
+            draw_bitmap_region_fast(bmpHUD,
+                12, sy, 3, 8,
+                x + dx * ROOM_WIDTH, 
+                y + dy * ROOM_HEIGHT);
+        }
+    }
 }
 
 
@@ -147,24 +220,46 @@ static void draw_treasure(i16 x, i16 y) {
 }
 
 
+static void draw_battery(i16 x, i16 y) {
+
+    const i16 MAX_BATTERY = 12;
+    const i16 TEMP_BATTERY_LEVEL = 3;
+
+    i16 i;
+    i16 sx;
+
+    draw_bitmap_region_fast(bmpHUD, 8, 24, 4, 16, x, y);
+
+    for (i = 0; i < MAX_BATTERY; ++ i) {
+
+        sx = (i16)(i < TEMP_BATTERY_LEVEL) * 2;
+
+        draw_bitmap_region_fast(bmpHUD, sx + 12, 24, 2, 16, x + 4+i, y);
+    }
+}
+
+
 static void draw_hud() {
 
     clear_screen(1);
         draw_frame(bmpHUD, gameStage->xoff, gameStage->yoff,
             gameStage->roomWidth*4,
             gameStage->roomHeight*16, 
-            0, true);
+            0, 0, true);
 
     // Logo
-    draw_bitmap_fast(bmpLogo, 80 - 21, 8);
+    draw_bitmap_fast(bmpLogo, 80 - 21, 0);
 
     // Map
-    draw_map(80-19, 84);
-    draw_text(bmpFont, "MAP:", 80-10, 71, true);
+    draw_map_frame(MAP_X, MAP_Y);
 
     // Treasure & items
-    draw_text(bmpFont, "TREASURE:", 80-11, 148, true);
-    draw_treasure(80- 21, 158);
+    draw_text(bmpFont, "TREASURE:", 80-11, 134, true);
+    draw_treasure(80-21, 143);
+
+    // Battery
+    draw_text(bmpFont, "BATTERY:", 80-11, 172-8, true);
+    draw_battery(80-20, 174);
 }
 
 
@@ -174,6 +269,12 @@ void game_redraw() {
 
         draw_hud();
         bgDrawn = true;
+    }
+
+    if (!mapDrawn) {
+
+        draw_map(MAP_X, MAP_Y);
+        mapDrawn = true;
     }
 
     pl_update_stage_tile_buffer(player, gameStage);
@@ -208,4 +309,7 @@ void dispose_game_scene() {
 
     if (player != NULL)
         free(player);
+
+    if (visitedRooms != NULL)
+        free(visitedRooms);
 }

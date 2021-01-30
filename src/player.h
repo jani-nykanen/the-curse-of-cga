@@ -22,7 +22,7 @@ typedef struct {
 
 Player create_player(i16 x, i16 y, Stage* s);
 
-void pl_update(Player* pl, Stage* s, i16 step);
+bool pl_update(Player* pl, Stage* s, i16 step);
 void pl_draw(Player* pl, Bitmap* bmpPlayer);
 
 void pl_update_stage_tile_buffer(Player* pl, Stage* s);

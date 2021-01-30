@@ -76,7 +76,7 @@ static void pl_control(Player* pl, Stage* s, i16 step) {
 }
 
 
-static void pl_check_camera(Player* pl, Stage* s) {
+static bool pl_check_camera(Player* pl, Stage* s) {
 
     i16 dx, dy;
 
@@ -93,17 +93,21 @@ static void pl_check_camera(Player* pl, Stage* s) {
         pl->target.y -= dy;
 
         pl_compute_render_pos(pl, s);
+
+        return true;
     }
+    return false;
 }
 
 
-static void pl_move(Player* pl, Stage* s, i16 step) {
+static bool pl_move(Player* pl, Stage* s, i16 step) {
 
     i16 moveStep = MOVE_TIME / 4;
     i16 delta;
     i16 oldTime;
+    bool ret = false;
     
-    if (!pl->moving) return;
+    if (!pl->moving) return false;
 
     oldTime = pl->moveTimer;
     if ((pl->moveTimer -= step) <= 0) {
@@ -112,18 +116,19 @@ static void pl_move(Player* pl, Stage* s, i16 step) {
         pl->pos = pl->target;
         pl_compute_render_pos(pl, s);
 
-        return;
+        return false;
     }
 
     if (oldTime >= MOVE_TIME/2 && pl->moveTimer < MOVE_TIME/2) {
 
-        pl_check_camera(pl, s);
+        ret = pl_check_camera(pl, s);
     }
 
     delta = 4 - fixed_round(pl->moveTimer, moveStep);
     pl->rpos.x += pl->dir.x * delta;
     pl->rpos.y += pl->dir.y * delta * 4;
-    
+
+    return ret;
 }
 
 
@@ -143,13 +148,17 @@ static void pl_animate(Player* pl, i16 step) {
 
 
 
-void pl_update(Player* pl, Stage* s, i16 step) {
+bool pl_update(Player* pl, Stage* s, i16 step) {
     
+    bool ret = false;
+
     pl_control(pl, s, step);
     pl_compute_render_pos(pl, s);
 
     pl_animate(pl, step);
-    pl_move(pl, s, step);
+    ret = pl_move(pl, s, step);
+
+    return ret;
 }
 
 
