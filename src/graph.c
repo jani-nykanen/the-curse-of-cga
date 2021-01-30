@@ -80,7 +80,7 @@ static void draw_text_base(
 
     if (center) {
 
-        x -= strlen(text) * (d / 4);
+        x -= strlen(text) * (d / 4) / 2;
     }
     dx = x;
     dy = y;
