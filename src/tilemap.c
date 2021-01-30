@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 
 Tilemap* load_tilemap(const str path) {
@@ -79,31 +80,29 @@ void dispose_tilemap(Tilemap* tmap) {
 }
 
 
-i16 tmap_get_tile(Tilemap* tmap, u16 layer, i16 x, i16 y, i16 def) {
+u8 tmap_get_tile(Tilemap* tmap, u16 layer, i16 x, i16 y, u8 def) {
 
     if (layer >= tmap->layerCount || 
         x < 0 || x >= tmap->width ||
         y < 0 || y >= tmap->height) 
         return def;
 
-    return (i16)tmap->data[layer][y * tmap->width + x];
+    return tmap->data[layer][y * tmap->width + x];
 }
 
 
-void tmap_clone_area_i16(Tilemap* tmap, i16* out,
+void tmap_clone_area(Tilemap* tmap, u8* out,
     u16 layer, i16 x, i16 y, i16 w, i16 h) {
 
-    i16 dx, dy;
-    i16 px, py;
+    i16 dy;
 
-    // Can't memcpy because we are changing the array type
-    for (dy = y, py = 0; dy < y + h; ++ dy, ++ py) {
+    u32 djump = 0;
+    u32 sjump = y * tmap->width + x;
 
-        for (dx = x, px = 0; dx < x + w; ++ dx, ++ px) {
+    for (dy = 0; dy < h; ++ dy) {
 
-            // A bit slower than direct access, but since this is called only
-            // in the room transition, it does not matter
-            out[py * w + px] = tmap_get_tile(tmap, layer, dx, dy, -1);
-        }
+        memcpy(out + djump, tmap->data[layer] + sjump, w);
+        djump += w;
+        sjump += tmap->width;
     }
 }

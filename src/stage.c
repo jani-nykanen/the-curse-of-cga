@@ -9,16 +9,47 @@
 #include <string.h>
 
 
-static i16 get_tile(Stage* s, i16 x, i16 y, i16 def) {
+static bool is_solid(u8 v) {
+
+    static const TABLE[] = {
+        0, 1, 1, 1,
+
+        0, 0, 0, 0, 0, 0, 0, 0
+    };
+
+    return TABLE[(i16)v];
+}
+
+
+static bool is_solid_ignore_water(u8 v) {
+
+    if (v == 3)
+        return false;
+
+    return is_solid(v);
+}
+
+
+static u8 get_tile(Stage* s, u8* arr, i16 x, i16 y, u8 def) {
 
     if (x < 0 || y < 0 || x >= s->roomWidth || y >= s->roomHeight)
         return def;
 
-    return s->roomTiles[y * s->roomWidth + x];
+    return arr[y * s->roomWidth + x];
 }
 
 
-static void set_tile(Stage* s, i16 x, i16 y, i16 v) {
+static u8 get_tile_either(Stage* s, i16 x, i16 y, u8 def) {
+
+    u8 id = get_tile(s, s->roomTilesStatic, x, y, def);
+    if (id == 0)
+        return get_tile(s, s->roomTilesDynamic, x, y, def);
+
+    return id;
+}
+
+
+static void set_tile(Stage* s, u8* arr, i16 x, i16 y, u8 v) {
 
     i16 i;
 
@@ -28,7 +59,25 @@ static void set_tile(Stage* s, i16 x, i16 y, i16 v) {
     i = y * s->roomWidth + x;
 
     s->renderBuffer[i] = true;
-    s->roomTiles[i] = v;
+    arr[i] = v;
+}
+
+
+static void set_tile_both(Stage* s, i16 x, i16 y, u8 v) {
+
+    set_tile(s, s->roomTilesStatic, x, y, v);
+    set_tile(s, s->roomTilesDynamic, x, y, v);
+}
+
+
+static void check_confict(Stage* s, i16 x, i16 y) {
+
+    // Rock & water
+    if (get_tile(s, s->roomTilesDynamic, x, y, 0) == 2 &&
+        get_tile(s, s->roomTilesStatic, x, y, 0) == 3) {
+
+        set_tile_both(s, x, y, 0);
+    }
 }
 
 
@@ -49,7 +98,8 @@ static TileWallData gen_tile_wall_data(Stage* s, i16 dx, i16 dy) {
 
         for (y = 0; y < 3; ++ y) {
 
-            neighbourhood[y * 3 + x] = get_tile(s, dx+x-1, dy+y-1, 1) == 1;
+            neighbourhood[y * 3 + x] = get_tile(s, s->roomTilesStatic, 
+                dx+x-1, dy+y-1, 1) == 1;
         }
     }
 
@@ -145,7 +195,7 @@ static void gen_wall_tile_map(Stage* s) {
 
         for (x = 0; x < s->roomWidth; ++ x) {
 
-            switch (get_tile(s, x, y, 1)) {
+            switch (get_tile(s, s->roomTilesStatic, x, y, 1)) {
 
             case 1:
                 s->wallTiles[y * s->roomWidth + x] = gen_tile_wall_data(s, x, y);
@@ -177,14 +227,26 @@ Stage* new_stage(Tilemap* baseMap,
     s->roomHeight = roomHeight;
     s->camPos = vec2(camX, camY);
 
-    s->roomTiles = (i16*)malloc(sizeof(i16) * roomWidth * roomHeight);
-    if (s->roomTiles == NULL) {
+    // Static tiles for objects that cannot be moved,
+    // and that can be overlaid
+    s->roomTilesStatic = (u8*)malloc(roomWidth * roomHeight);
+    if (s->roomTilesStatic == NULL) {
 
         dispose_stage(s);
         return NULL;
     }
-    tmap_clone_area_i16(baseMap, s->roomTiles,
+    tmap_clone_area(baseMap, s->roomTilesStatic,
         0, camX, camY, roomWidth, roomHeight);
+
+    // Dynamic objects may overlay static ones
+    s->roomTilesDynamic = (u8*)malloc(roomWidth * roomHeight);
+    if (s->roomTilesDynamic == NULL) {
+
+        dispose_stage(s);
+        return NULL;
+    }
+    memcpy(s->roomTilesDynamic, s->roomTilesStatic, 
+        roomWidth * roomHeight);
 
     s->wallTiles = (TileWallData*) malloc(sizeof(TileWallData) * roomWidth * roomHeight);
     if (s->wallTiles == NULL) {
@@ -212,8 +274,10 @@ void dispose_stage(Stage* s) {
         free(s->renderBuffer);
     if (s->wallTiles != NULL)
         free(s->wallTiles);
-    if (s->roomTiles != NULL)
-        free(s->roomTiles);
+    if (s->roomTilesStatic != NULL)
+        free(s->roomTilesStatic);
+    if (s->roomTilesDynamic != NULL)
+        free(s->roomTilesDynamic);    
 
     free(s);
 }
@@ -234,6 +298,11 @@ void stage_update(Stage* s, i16 step) {
                 s->rockAnim.target.y);
 
         s->rockAnim.timer -= step;
+        if (s->rockAnim.timer <= 0) {
+
+            check_confict(s, s->rockAnim.target.x, s->rockAnim.target.y);
+            return;
+        }
 
         moveStep = s->rockAnim.startTime / 4;
         delta = 4 - fixed_round(s->rockAnim.timer, moveStep);
@@ -271,7 +340,7 @@ void stage_draw(Stage* s, Bitmap* bmpTileset) {
 
     i16 x, y;
     i16 index;
-    i16 tid;
+    u8 tid;
 
     for (y = 0; y < s->roomHeight; ++ y) {
 
@@ -282,14 +351,21 @@ void stage_draw(Stage* s, Bitmap* bmpTileset) {
                 continue;
             // s->renderBuffer[index] = false;
 
-            tid = get_tile(s, x, y, -1);
-            if (tid < 0) continue;
+            tid = get_tile(s, s->roomTilesStatic, x, y, 0);
 
             switch (tid) {
 
+            // Wall
             case 1:
-
                 stage_draw_wall(s, bmpTileset, x, y);
+                break;
+
+            // Water
+            case 3:
+                draw_bitmap_region_fast(bmpTileset,
+                        16, 16, 4, 16, 
+                        s->xoff + x*4,
+                        s->yoff + y*16);
                 break;
             
             default:
@@ -310,7 +386,7 @@ void stage_draw_objects(Stage* s, Bitmap* bmpObjects) {
 
     i16 x, y;
     i16 index;
-    i16 tid;
+    u8 tid;
 
     for (y = 0; y < s->roomHeight; ++ y) {
 
@@ -321,8 +397,8 @@ void stage_draw_objects(Stage* s, Bitmap* bmpObjects) {
                 continue;
             s->renderBuffer[index] = false;
 
-            tid = get_tile(s, x, y, -1);
-            if (tid < 0) continue;
+            tid = get_tile(s, s->roomTilesDynamic, x, y, 0);
+            if (tid == 0) continue;
 
             switch (tid) {
 
@@ -365,34 +441,22 @@ void stage_mark_tile_for_redraw(Stage* s, i16 x, i16 y) {
 }
 
 
-bool stage_is_tile_solid(Stage* s, i16 x, i16 y) {
-
-    return tmap_get_tile(s->baseMap, 0, 
-        s->camPos.x + x, 
-        s->camPos.y + y, 1) == 1;
-}
-
-
 bool stage_movement_collision(Stage* s, i16 x, i16 y, 
     i16 dx, i16 dy, i16 objectMoveTime) {
 
-    i16 id = get_tile(s, x, y, 0);
-    i16 mid;
+    u8 id = get_tile(s, s->roomTilesDynamic, x, y, 0);
+    u8 mid;
 
     switch (id) {
-
-    // Wall
-    case 1:
-        return true;
 
     // Rock
     case 2:
 
-        mid = get_tile(s, x+dx, y+dy, 1);
-        if (mid == 0) {
+        mid = get_tile_either(s, x+dx, y+dy, 1);
+        if (!is_solid_ignore_water(mid)) {
 
-            set_tile(s, x, y, 0);
-            set_tile(s, x+dx, y+dy, 2);
+            set_tile(s, s->roomTilesDynamic, x, y, 0);
+            set_tile(s, s->roomTilesDynamic, x+dx, y+dy, 2);
 
             s->rockAnim.pos = vec2(x, y);
             s->rockAnim.target = vec2(x+dx, y+dy);
@@ -407,7 +471,7 @@ bool stage_movement_collision(Stage* s, i16 x, i16 y,
         break;
     }
 
-    return false;
+    return is_solid(id);
 }
 
 
@@ -427,10 +491,13 @@ bool stage_check_camera_transition(Stage* s, i16 x, i16 y) {
         s->camPos.x += JUMP_X[dir-1] * s->roomWidth;
         s->camPos.y += JUMP_Y[dir-1] * s->roomHeight;
 
-        tmap_clone_area_i16(s->baseMap, 
-            s->roomTiles, 0, 
+        tmap_clone_area(s->baseMap, 
+            s->roomTilesStatic, 0, 
             s->camPos.x, s->camPos.y, 
             s->roomWidth, s->roomHeight);
+        memcpy(s->roomTilesDynamic, s->roomTilesStatic, 
+            s->roomWidth * s->roomHeight);
+
         gen_wall_tile_map(s);
 
         memset(s->renderBuffer, 1, s->roomWidth * s->roomHeight);
