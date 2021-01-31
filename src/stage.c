@@ -11,9 +11,11 @@
 
 static bool is_solid(u8 v) {
 
-    static const TABLE[] = {
-        0, 1, 1, 1, 0, 1, 1, 1,
+    static const bool TABLE[] = {
+        0, 1, 1, 1, 0, 1, 1, 1, 1,
 
+        // "Overflow" values, remove in the
+        // release version
         0, 0, 0, 0, 0, 0, 0, 0
     };
 
@@ -339,6 +341,8 @@ static void stage_draw_wall(Stage* s, Bitmap* bmpTileset,
 void stage_draw(Stage* s, Bitmap* bmpTileset) {
 
     i16 x, y;
+    i16 dx, dy;
+    i16 sx, sy;
     i16 index;
     u8 tid;
 
@@ -352,39 +356,55 @@ void stage_draw(Stage* s, Bitmap* bmpTileset) {
             // s->renderBuffer[index] = false;
 
             tid = get_tile(s, s->roomTilesStatic, x, y, 0);
+            dx = s->xoff + x*4;
+            dy = s->yoff + y*16;
 
             switch (tid) {
 
             // Wall
             case 1:
                 stage_draw_wall(s, bmpTileset, x, y);
-                break;
+               continue;
 
             // Water
             case 3:
-                draw_bitmap_region_fast(bmpTileset,
-                        16, 16, 4, 16, 
-                        s->xoff + x*4,
-                        s->yoff + y*16);
+
+                sx = 16;
+                sy = 16;
                 break;
             
-            // Switch
+            // Special walls
             case 4:
             case 5:
 
-                draw_bitmap_region_fast(bmpTileset,
-                        (tid-4) * 4, 16, 4, 16, 
-                        s->xoff + x*4,
-                        s->yoff + y*16);
+                sx = (tid-4) * 4;
+                sy = 16;
+                break;
+
+            // Bolt
+            case 6:
+            case 7:
+
+                sx = 8 + 4 * (tid-6);
+                sy = 16;
+                break;
+
+            // Flower
+            case 8:
+
+                sx = 20;
+                sy = 0;
                 break;
 
             default:
-                draw_bitmap_region_fast(bmpTileset,
-                        16, 0, 4, 16, 
-                        s->xoff + x*4,
-                        s->yoff + y*16);
+                sx = 16;
+                sy = 0;
                 break;
             }
+
+            draw_bitmap_region_fast(bmpTileset,
+                sx, sy, 4, 16, 
+                dx, dy);
         }
     }
 }
@@ -428,14 +448,6 @@ void stage_draw_objects(Stage* s, Bitmap* bmpObjects) {
                 }
 
                 break;
-
-            case 6:
-            case 7:
-
-                draw_bitmap_region(bmpObjects,
-                    4 + 4 * (tid-6), 0, 4, 16, 
-                    dx, dy);
-                break;
             
             default:
                 break;
@@ -462,7 +474,7 @@ void stage_mark_tile_for_redraw(Stage* s, i16 x, i16 y) {
 }
 
 
-static void rotate_bolt(Stage* s, i16 dx, i16 dy, u8 v) {
+static void swap_walls(Stage* s, i16 dx, i16 dy) {
 
     i16 x, y;
     u8 tid;
@@ -475,20 +487,25 @@ static void rotate_bolt(Stage* s, i16 dx, i16 dy, u8 v) {
             tid = get_tile(s, s->roomTilesStatic, x, y, 0);
             if (tid == 4 || tid == 5) {
 
-                set_tile(s, s->roomTilesStatic, x, y,
-                    tid == 4 ? 5 : 4);
+                set_tile_both(s, x, y, tid == 4 ? 5 : 4);
             }
 
-            tid = get_tile(s, s->roomTilesDynamic, x, y, 0);
+            tid = get_tile(s, s->roomTilesStatic, x, y, 0);
             if (tid == 7) {
 
-                set_tile(s, s->roomTilesDynamic, x, y, 6);
+                set_tile_both(s, x, y, 6);
             }
 
         }
     }
 
-    set_tile(s, s->roomTilesDynamic, dx, dy, 7);
+    set_tile_both(s, dx, dy, 7);
+}
+
+
+static void cut_flower(Stage* s, i16 x, i16 y) {
+
+    set_tile_both(s, x, y, 0);
 }
 
 
@@ -524,7 +541,16 @@ bool stage_movement_collision(Stage* s,
 
         if (actionType == STATE_PRESSED) {
 
-            rotate_bolt(s, x, y, id);
+            swap_walls(s, x, y);
+        }
+        return true;
+
+    // Flower
+    case 8:
+
+        if (actionType == STATE_PRESSED) {
+
+            cut_flower(s, x, y);
         }
         return true;
 
