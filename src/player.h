@@ -5,6 +5,8 @@
 #include "sprite.h"
 #include "stage.h"
 
+#define PLAYER_MAX_BATTERY_LEVEL 12
+
 typedef struct {
 
     Vector2 pos;
@@ -17,6 +19,11 @@ typedef struct {
     i16 moveTimer;
 
     Sprite spr;
+
+    // Item amounts
+    u8 keys;
+    u8 gems;
+    u8 battery;
 
 } Player;
 

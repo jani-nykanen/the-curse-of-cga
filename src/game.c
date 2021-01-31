@@ -46,6 +46,10 @@ static Player* player;
 
 static u8* visitedRooms;
 
+static u8 oldKeys;
+static u8 oldGems;
+static u8 oldBatteryLevel;
+
 
 static void draw_frame(Bitmap* bmp, i16 x, i16 y, i16 w, i16 h, 
     i16 xshift, i16 wextra, bool drawShadow) {
@@ -135,6 +139,12 @@ bool init_game_scene() {
     memset(visitedRooms, 0, ROOM_COUNT_X * ROOM_COUNT_Y);
     mark_room_visited();
 
+    // Since -1 is not possible. This forces
+    // redraw
+    oldKeys = 255;
+    oldGems = 255;
+    oldBatteryLevel = 255;
+
     return false;
 }
 
@@ -164,7 +174,7 @@ static void draw_map_frame(i16 x, i16 y) {
     draw_frame(bmpHUD, x, y, MAP_WIDTH, MAP_HEIGHT, 6, 1, false);
     fill_rect(x, y, MAP_WIDTH, MAP_HEIGHT, 0);
 
-    draw_text(bmpFont, "MAP:", 80-11, y-15, true);
+    draw_text_fast(bmpFont, "MAP:", 80-11, y-15, true);
 }
 
 
@@ -208,38 +218,45 @@ static void draw_treasure(i16 x, i16 y) {
 
     char buffer[8];
 
-    // Keys
-    snprintf(buffer, 8, "\2%d", 0);
-    draw_bitmap_region_fast(bmpHUD, 0, 24, 4, 16, x, y);
-    draw_text(bmpFont, buffer, x+4, y+4, false);
+    if (oldKeys != player->keys) {
 
-    // Gems
-    snprintf(buffer, 8, "\2%d", 0);
-    draw_bitmap_region_fast(bmpHUD, 4, 24, 4, 16, x+10, y);
-    draw_text(bmpFont, buffer, x+14, y+4, false);
+        // Keys
+        snprintf(buffer, 8, "\2%d", player->keys);
+        draw_bitmap_region_fast(bmpHUD, 0, 24, 4, 16, x, y);
+        draw_text_fast(bmpFont, buffer, x+4, y+4, false);
+
+        oldKeys = player->keys;
+    }
+
+    if (oldGems != player->gems) {
+
+        // Gems
+        snprintf(buffer, 8, "\2%d", player->gems);
+        draw_bitmap_region_fast(bmpHUD, 4, 24, 4, 16, x+10, y);
+        draw_text_fast(bmpFont, buffer, x+14, y+4, false);
+
+        oldGems = player->gems;
+    }
 }
 
 
 static void draw_battery(i16 x, i16 y) {
-
-    const i16 MAX_BATTERY = 12;
-    const i16 TEMP_BATTERY_LEVEL = 3;
 
     i16 i;
     i16 sx;
 
     draw_bitmap_region_fast(bmpHUD, 8, 24, 4, 16, x, y);
 
-    for (i = 0; i < MAX_BATTERY; ++ i) {
+    for (i = 0; i < PLAYER_MAX_BATTERY_LEVEL; ++ i) {
 
-        sx = (i16)(i < TEMP_BATTERY_LEVEL) * 2;
+        sx = (i16)(i < (i16)player->battery) * 2;
 
         draw_bitmap_region_fast(bmpHUD, sx + 12, 24, 2, 16, x + 4+i, y);
     }
 }
 
 
-static void draw_hud() {
+static void draw_hud_static() {
 
     clear_screen(1);
         draw_frame(bmpHUD, gameStage->xoff, gameStage->yoff,
@@ -254,12 +271,31 @@ static void draw_hud() {
     draw_map_frame(MAP_X, MAP_Y);
 
     // Treasure & items
-    draw_text(bmpFont, "TREASURE:", 80-11, 134, true);
-    draw_treasure(80-21, 143);
+    draw_text_fast(bmpFont, "TREASURE:", 80-11, 134, true);
 
     // Battery
-    draw_text(bmpFont, "BATTERY:", 80-11, 172-8, true);
-    draw_battery(80-20, 174);
+    draw_text_fast(bmpFont, "BATTERY:", 80-11, 172-8, true);
+}
+
+
+static void draw_hud_changing() {
+
+    if (!mapDrawn) {
+
+        draw_map(MAP_X, MAP_Y);
+        mapDrawn = true;
+    }
+
+    // Treasure
+    draw_treasure(80-21, 143);
+
+    if (oldBatteryLevel != player->battery) {
+
+        // Battery
+        draw_battery(80-20, 174);
+
+        oldBatteryLevel = player->battery;
+    }
 }
 
 
@@ -267,15 +303,11 @@ void game_redraw() {
 
     if (!bgDrawn) {
 
-        draw_hud();
+        draw_hud_static();
         bgDrawn = true;
     }
 
-    if (!mapDrawn) {
-
-        draw_map(MAP_X, MAP_Y);
-        mapDrawn = true;
-    }
+    draw_hud_changing();
 
     pl_update_stage_tile_buffer(player, gameStage);
     stage_draw(gameStage, bmpTileset);

@@ -32,6 +32,12 @@ static bool is_solid_ignore_water(u8 v) {
 }
 
 
+static bool is_item(u8 v) {
+
+    return v >= 17;
+}
+
+
 static u8 get_tile(Stage* s, u8* arr, i16 x, i16 y, u8 def) {
 
     if (x < 0 || y < 0 || x >= s->roomWidth || y >= s->roomHeight)
@@ -69,6 +75,13 @@ static void set_tile_both(Stage* s, i16 x, i16 y, u8 v) {
 
     set_tile(s, s->roomTilesStatic, x, y, v);
     set_tile(s, s->roomTilesDynamic, x, y, v);
+}
+
+
+static void set_tile_permanent(Stage* s, i16 x, i16 y, u8 v) {
+
+    set_tile_both(s, x, y, v);
+    tmap_set_tile(s->baseMap, 0, x, y, v);
 }
 
 
@@ -411,6 +424,12 @@ void stage_draw(Stage* s, Bitmap* bmpTileset) {
                 break;
             }
 
+            if (tid >= 17) {
+
+                sx = 4 * (tid - 17);
+                sy = 32;
+            }
+
             draw_bitmap_region_fast(bmpTileset,
                 sx, sy, 4, 16, 
                 dx, dy);
@@ -527,7 +546,8 @@ static void break_ice_block(Stage* s, i16 x, i16 y) {
 
 u8 stage_movement_collision(Stage* s, 
     State actionType, i16 x, i16 y, 
-    i16 dx, i16 dy, i16 objectMoveTime) {
+    i16 dx, i16 dy, i16 objectMoveTime,
+    u8* interactionLevel) {
 
     u8 id = get_tile(s, s->roomTilesDynamic, x, y, 0);
     u8 mid;
@@ -565,9 +585,12 @@ u8 stage_movement_collision(Stage* s,
     // Flower
     case 8:
 
-        if (actionType == STATE_PRESSED) {
+        if ((*interactionLevel) > 0 && 
+            actionType == STATE_PRESSED) {
 
             cut_flower(s, x, y);
+            -- (*interactionLevel);
+
             return 2;
         }
         return 0;
@@ -575,9 +598,12 @@ u8 stage_movement_collision(Stage* s,
     // Ice block
     case 9:
 
-        if (actionType == STATE_PRESSED) {
+        if ((*interactionLevel) > 0 &&
+            actionType == STATE_PRESSED) {
 
             break_ice_block(s, x, y);
+            -- (*interactionLevel);
+
             return 2;
         }
         return 0;
@@ -620,4 +646,22 @@ bool stage_check_camera_transition(Stage* s, i16 x, i16 y) {
         return true;
     }
     return false;
+}
+
+
+u8 stage_check_overlay(Stage* s, i16 x, i16 y) {
+
+    u8 v = get_tile(s, s->roomTilesStatic, x, y, 0);
+
+    if (is_item(v)) {
+
+        if (v == 17)
+            set_tile_permanent(s, x, y, 0);
+        else
+            set_tile_both(s, x, y, 0);
+
+        return v - 16;
+    }
+
+    return 0;
 }

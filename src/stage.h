@@ -56,7 +56,9 @@ void stage_draw_objects(Stage* s, Bitmap* bmpObjects);
 void stage_mark_tile_for_redraw(Stage* s, i16 x, i16 y);
 
 u8 stage_movement_collision(Stage* s, State actionType,
-    i16 x, i16 y, i16 dx, i16 dy, i16 objectMoveTime);
+    i16 x, i16 y, i16 dx, i16 dy, i16 objectMoveTime,
+    u8* interactionLevel);
 bool stage_check_camera_transition(Stage* s, i16 x, i16 y);
+u8 stage_check_overlay(Stage* s, i16 x, i16 y);
 
 #endif // __STAGE__

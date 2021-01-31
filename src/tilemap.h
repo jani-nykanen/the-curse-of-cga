@@ -19,6 +19,7 @@ Tilemap* load_tilemap(const str path);
 void dispose_tilemap(Tilemap* tmap);
 
 u8 tmap_get_tile(Tilemap* tmap, u16 layer, i16 x, i16 y, u8 def);
+void tmap_set_tile(Tilemap* tmap, u16 layer, i16 x, i16 y, u8 v);
 
 void tmap_clone_area(Tilemap* tmap, u8* out,
     u16 layer, i16 x, i16 y, i16 w, i16 h);

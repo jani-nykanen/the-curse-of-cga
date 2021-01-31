@@ -91,6 +91,17 @@ u8 tmap_get_tile(Tilemap* tmap, u16 layer, i16 x, i16 y, u8 def) {
 }
 
 
+void tmap_set_tile(Tilemap* tmap, u16 layer, i16 x, i16 y, u8 v) {
+
+    if (layer >= tmap->layerCount || 
+        x < 0 || x >= tmap->width ||
+        y < 0 || y >= tmap->height) 
+        return;
+
+    tmap->data[layer][y * tmap->width + x] = v;
+}
+
+
 void tmap_clone_area(Tilemap* tmap, u8* out,
     u16 layer, i16 x, i16 y, i16 w, i16 h) {
 

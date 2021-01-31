@@ -24,6 +24,10 @@ Player create_player(i16 x, i16 y, Stage* s) {
 
     pl.spr = create_sprite(4, 16);
 
+    pl.keys = 0;
+    pl.gems = 0;
+    pl.battery = 0;
+
     return pl;
 }
 
@@ -69,7 +73,7 @@ static void pl_control(Player* pl, Stage* s, i16 step) {
 
         actionType = stage_movement_collision(s, k,
                 pl->pos.x + dx, pl->pos.y + dy, 
-                dx, dy, MOVE_TIME);
+                dx, dy, MOVE_TIME, &pl->battery);
     }
 
     if (actionType == 1) {
@@ -110,6 +114,9 @@ static bool pl_check_camera(Player* pl, Stage* s) {
 
         pl_compute_render_pos(pl, s);
 
+        // Reset battery
+        pl->battery = 0;
+
         return true;
     }
     return false;
@@ -134,6 +141,33 @@ static bool pl_animate_interaction(Player* pl, i16 step) {
 }
 
 
+static bool pl_tile_check(Player* pl, Stage* s) {
+
+    u8 res = stage_check_overlay(s, pl->pos.x, pl->pos.y);
+    
+    if (res >= 1) {
+
+        switch (res) {
+
+        case 1:
+
+            ++ pl->keys;
+            break;
+
+        case 2:
+
+            pl->battery = min_i16(PLAYER_MAX_BATTERY_LEVEL, pl->battery + 3);
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    return false;
+}
+
+
 static bool pl_move(Player* pl, Stage* s, i16 step) {
 
     i16 moveStep = MOVE_TIME / 4;
@@ -148,6 +182,8 @@ static bool pl_move(Player* pl, Stage* s, i16 step) {
 
         pl->moving = false;
         pl->pos = pl->target;
+        pl_tile_check(pl, s);
+
         pl_compute_render_pos(pl, s);
 
         return false;
