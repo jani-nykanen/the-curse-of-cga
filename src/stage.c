@@ -12,7 +12,7 @@
 static bool is_solid(u8 v) {
 
     static const bool TABLE[] = {
-        0, 1, 1, 1, 0, 1, 1, 1, 1,
+        0, 1, 1, 1, 0, 1, 1, 1, 1, 1,
 
         // "Overflow" values, remove in the
         // release version
@@ -346,6 +346,8 @@ void stage_draw(Stage* s, Bitmap* bmpTileset) {
     i16 index;
     u8 tid;
 
+    // TODO: Look-up table? Most of the tiles
+    // are normal
     for (y = 0; y < s->roomHeight; ++ y) {
 
         for (x = 0; x < s->roomWidth; ++ x) {
@@ -394,6 +396,13 @@ void stage_draw(Stage* s, Bitmap* bmpTileset) {
 
                 sx = 20;
                 sy = 0;
+                break;
+
+            // Ice block
+            case 9:
+
+                sx = 20;
+                sy = 16;
                 break;
 
             default:
@@ -509,7 +518,14 @@ static void cut_flower(Stage* s, i16 x, i16 y) {
 }
 
 
-bool stage_movement_collision(Stage* s, 
+static void break_ice_block(Stage* s, i16 x, i16 y) {
+
+    set_tile(s, s->roomTilesStatic, x, y, 0);
+    set_tile(s, s->roomTilesDynamic, x, y, 2);
+}
+
+
+u8 stage_movement_collision(Stage* s, 
     State actionType, i16 x, i16 y, 
     i16 dx, i16 dy, i16 objectMoveTime) {
 
@@ -532,9 +548,9 @@ bool stage_movement_collision(Stage* s,
             s->rockAnim.startTime = objectMoveTime;
             s->rockAnim.timer = objectMoveTime;
 
-            return false;
+            return 1;
         }
-        return true;
+        return 0;
 
     // Bolt
     case 6:
@@ -542,8 +558,9 @@ bool stage_movement_collision(Stage* s,
         if (actionType == STATE_PRESSED) {
 
             swap_walls(s, x, y);
+            return 2;
         }
-        return true;
+        return 0;
 
     // Flower
     case 8:
@@ -551,14 +568,25 @@ bool stage_movement_collision(Stage* s,
         if (actionType == STATE_PRESSED) {
 
             cut_flower(s, x, y);
+            return 2;
         }
-        return true;
+        return 0;
+
+    // Ice block
+    case 9:
+
+        if (actionType == STATE_PRESSED) {
+
+            break_ice_block(s, x, y);
+            return 2;
+        }
+        return 0;
 
     default:
         break;
     }
 
-    return is_solid(id);
+    return (u8)!is_solid(id);
 }
 
 

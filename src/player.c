@@ -6,6 +6,7 @@
 
 
 static const i16 MOVE_TIME = 20;
+static const i16 INTERACTION_TIME = 20;
 
 
 Player create_player(i16 x, i16 y, Stage* s) {
@@ -18,6 +19,7 @@ Player create_player(i16 x, i16 y, Stage* s) {
 
     pl.moveTimer = 0;
     pl.moving = false;
+    pl.interacting = false;
     pl.dir = vec2(0, 0);
 
     pl.spr = create_sprite(4, 16);
@@ -37,8 +39,9 @@ static void pl_control(Player* pl, Stage* s, i16 step) {
     i16 dx = 0;
     i16 dy = 0;
     State k;
+    u8 actionType;
 
-    if (pl->moving) return;
+    if (pl->moving || pl->interacting) return;
 
     if ((k = keyb_get_ext_key(KEY_RIGHT)) & STATE_DOWN_OR_PRESSED) {
 
@@ -61,10 +64,15 @@ static void pl_control(Player* pl, Stage* s, i16 step) {
         dy = -1;
     }
 
-    if ((dx != 0 || dy != 0) &&
-        !stage_movement_collision(s, k,
-            pl->pos.x + dx, pl->pos.y + dy, 
-            dx, dy, MOVE_TIME)) {
+    actionType = 0;
+    if (dx != 0 || dy != 0) {
+
+        actionType = stage_movement_collision(s, k,
+                pl->pos.x + dx, pl->pos.y + dy, 
+                dx, dy, MOVE_TIME);
+    }
+
+    if (actionType == 1) {
 
         pl->target.x = pl->pos.x + dx;
         pl->target.y = pl->pos.y + dy;
@@ -74,6 +82,12 @@ static void pl_control(Player* pl, Stage* s, i16 step) {
 
         pl->moveTimer = MOVE_TIME;
         pl->moving = true;
+    }
+    else if (actionType == 2) {
+
+        pl->moveTimer = INTERACTION_TIME;
+        pl->interacting = true;
+        pl->moving = false;
     }
 }
 
@@ -102,6 +116,24 @@ static bool pl_check_camera(Player* pl, Stage* s) {
 }
 
 
+static bool pl_animate_interaction(Player* pl, i16 step) {
+
+    if (pl->interacting) {
+
+        if ((pl->moveTimer -= step) <= 0) {
+
+            pl->interacting = false;
+            spr_set_frame(&pl->spr, 0, pl->spr.row);
+        }
+        else {
+
+            spr_set_frame(&pl->spr, 4, pl->spr.row);
+        }
+    }
+    return pl->interacting;
+}
+
+
 static bool pl_move(Player* pl, Stage* s, i16 step) {
 
     i16 moveStep = MOVE_TIME / 4;
@@ -109,7 +141,7 @@ static bool pl_move(Player* pl, Stage* s, i16 step) {
     i16 oldTime;
     bool ret = false;
     
-    if (!pl->moving) return false;
+    if (!pl->moving || pl->interacting) return false;
 
     oldTime = pl->moveTimer;
     if ((pl->moveTimer -= step) <= 0) {
@@ -138,6 +170,12 @@ static void pl_animate(Player* pl, i16 step) {
 
     const i16 ANIM_SPEED = 8;
 
+    if (pl->interacting) {
+
+        pl_animate_interaction(pl, step);
+        return;
+    }
+
     if (pl->moving) {
 
         spr_animate(&pl->spr, pl->spr.row, 0, 3, ANIM_SPEED, step);
@@ -156,10 +194,9 @@ bool pl_update(Player* pl, Stage* s, i16 step) {
 
     pl_control(pl, s, step);
     pl_compute_render_pos(pl, s);
-
     pl_animate(pl, step);
     ret = pl_move(pl, s, step);
-
+    
     return ret;
 }
 

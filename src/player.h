@@ -13,6 +13,7 @@ typedef struct {
     Vector2 dir;
     
     bool moving;
+    bool interacting; // Couldn't come up with a better word sorry
     i16 moveTimer;
 
     Sprite spr;
