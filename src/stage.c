@@ -12,7 +12,7 @@
 static bool is_solid(u8 v) {
 
     static const TABLE[] = {
-        0, 1, 1, 1,
+        0, 1, 1, 1, 0, 1, 1, 1,
 
         0, 0, 0, 0, 0, 0, 0, 0
     };
@@ -368,6 +368,16 @@ void stage_draw(Stage* s, Bitmap* bmpTileset) {
                         s->yoff + y*16);
                 break;
             
+            // Switch
+            case 4:
+            case 5:
+
+                draw_bitmap_region_fast(bmpTileset,
+                        (tid-4) * 4, 16, 4, 16, 
+                        s->xoff + x*4,
+                        s->yoff + y*16);
+                break;
+
             default:
                 draw_bitmap_region_fast(bmpTileset,
                         16, 0, 4, 16, 
@@ -385,6 +395,7 @@ void stage_draw(Stage* s, Bitmap* bmpTileset) {
 void stage_draw_objects(Stage* s, Bitmap* bmpObjects) {
 
     i16 x, y;
+    i16 dx, dy;
     i16 index;
     u8 tid;
 
@@ -400,6 +411,9 @@ void stage_draw_objects(Stage* s, Bitmap* bmpObjects) {
             tid = get_tile(s, s->roomTilesDynamic, x, y, 0);
             if (tid == 0) continue;
 
+            dx = s->xoff + x*4;
+            dy = s->yoff + y*16;
+
             switch (tid) {
 
             case 2:
@@ -410,10 +424,17 @@ void stage_draw_objects(Stage* s, Bitmap* bmpObjects) {
 
                     draw_bitmap_region(bmpObjects,
                         0, 0, 4, 16, 
-                        s->xoff + x*4,
-                        s->yoff + y*16);
+                        dx, dy);
                 }
 
+                break;
+
+            case 6:
+            case 7:
+
+                draw_bitmap_region(bmpObjects,
+                    4 + 4 * (tid-6), 0, 4, 16, 
+                    dx, dy);
                 break;
             
             default:
@@ -452,7 +473,7 @@ bool stage_movement_collision(Stage* s, i16 x, i16 y,
     // Rock
     case 2:
 
-        mid = get_tile_either(s, x+dx, y+dy, 1);
+        mid = get_tile(s, s->roomTilesDynamic, x+dx, y+dy, 1);
         if (!is_solid_ignore_water(mid)) {
 
             set_tile(s, s->roomTilesDynamic, x, y, 0);

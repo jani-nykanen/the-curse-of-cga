@@ -19,7 +19,7 @@ static const i16 MAP_Y = 77;
 // TODO: In future, fetch the following info
 // from the base map itself
 static const i16 ROOM_COUNT_X = 5;
-static const i16 ROOM_COUNT_Y = 6;
+static const i16 ROOM_COUNT_Y = 5;
 static const i16 MAP_WIDTH = 15;
 static const i16 MAP_HEIGHT = 48;
 
@@ -171,7 +171,7 @@ static void draw_map_frame(i16 x, i16 y) {
 static void draw_map(i16 x, i16 y) {
 
     const i16 ROOM_WIDTH = 3;
-    const i16 ROOM_HEIGHT = 8;
+    const i16 ROOM_HEIGHT = 10;
 
     i16 dx, dy;
     i16 sy;
@@ -192,11 +192,11 @@ static void draw_map(i16 x, i16 y) {
             }
             else {
 
-                sy = 8;
+                sy = ROOM_HEIGHT;
             }
 
             draw_bitmap_region_fast(bmpHUD,
-                12, sy, 3, 8,
+                12, sy, ROOM_WIDTH, ROOM_HEIGHT,
                 x + dx * ROOM_WIDTH, 
                 y + dy * ROOM_HEIGHT);
         }
