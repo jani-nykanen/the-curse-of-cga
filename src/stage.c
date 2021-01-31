@@ -462,7 +462,38 @@ void stage_mark_tile_for_redraw(Stage* s, i16 x, i16 y) {
 }
 
 
-bool stage_movement_collision(Stage* s, i16 x, i16 y, 
+static void rotate_bolt(Stage* s, i16 dx, i16 dy, u8 v) {
+
+    i16 x, y;
+    u8 tid;
+
+    // Swap walls
+    for (y = 0; y < s->roomHeight; ++ y) {
+
+        for (x = 0; x < s->roomWidth; ++ x) {
+
+            tid = get_tile(s, s->roomTilesStatic, x, y, 0);
+            if (tid == 4 || tid == 5) {
+
+                set_tile(s, s->roomTilesStatic, x, y,
+                    tid == 4 ? 5 : 4);
+            }
+
+            tid = get_tile(s, s->roomTilesDynamic, x, y, 0);
+            if (tid == 7) {
+
+                set_tile(s, s->roomTilesDynamic, x, y, 6);
+            }
+
+        }
+    }
+
+    set_tile(s, s->roomTilesDynamic, dx, dy, 7);
+}
+
+
+bool stage_movement_collision(Stage* s, 
+    State actionType, i16 x, i16 y, 
     i16 dx, i16 dy, i16 objectMoveTime) {
 
     u8 id = get_tile(s, s->roomTilesDynamic, x, y, 0);
@@ -485,6 +516,15 @@ bool stage_movement_collision(Stage* s, i16 x, i16 y,
             s->rockAnim.timer = objectMoveTime;
 
             return false;
+        }
+        return true;
+
+    // Bolt
+    case 6:
+
+        if (actionType == STATE_PRESSED) {
+
+            rotate_bolt(s, x, y, id);
         }
         return true;
 

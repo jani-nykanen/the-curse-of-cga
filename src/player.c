@@ -36,32 +36,34 @@ static void pl_control(Player* pl, Stage* s, i16 step) {
 
     i16 dx = 0;
     i16 dy = 0;
+    State k;
 
     if (pl->moving) return;
 
-    if (keyb_get_ext_key(KEY_RIGHT) & STATE_DOWN_OR_PRESSED) {
+    if ((k = keyb_get_ext_key(KEY_RIGHT)) & STATE_DOWN_OR_PRESSED) {
 
         pl->spr.row = 1;
         dx = 1;
     }
-    else if (keyb_get_ext_key(KEY_LEFT) & STATE_DOWN_OR_PRESSED) {
+    else if ((k = keyb_get_ext_key(KEY_LEFT)) & STATE_DOWN_OR_PRESSED) {
 
         pl->spr.row = 3;
         dx = -1;
     }
-    else if (keyb_get_ext_key(KEY_DOWN) & STATE_DOWN_OR_PRESSED) {
+    else if ((k = keyb_get_ext_key(KEY_DOWN)) & STATE_DOWN_OR_PRESSED) {
 
         pl->spr.row = 0;
         dy = 1;
     }
-    else if (keyb_get_ext_key(KEY_UP) & STATE_DOWN_OR_PRESSED) {
+    else if ((k = keyb_get_ext_key(KEY_UP)) & STATE_DOWN_OR_PRESSED) {
 
         pl->spr.row = 2;
         dy = -1;
     }
 
     if ((dx != 0 || dy != 0) &&
-        !stage_movement_collision(s, pl->pos.x + dx, pl->pos.y + dy, 
+        !stage_movement_collision(s, k,
+            pl->pos.x + dx, pl->pos.y + dy, 
             dx, dy, MOVE_TIME)) {
 
         pl->target.x = pl->pos.x + dx;
