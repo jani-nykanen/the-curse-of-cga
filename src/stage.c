@@ -538,6 +538,8 @@ void stage_draw_objects(Stage* s, Bitmap* bmpObjects) {
 void stage_draw_effects(Stage* s, Bitmap* bmpTileset) {
 
     i16 sx, sy;
+    i16 skip;
+    const i16 m = DISAPPEAR_TIME / 2;
 
     if (s->disappearTimer <= 0) return;
 
@@ -546,10 +548,19 @@ void stage_draw_effects(Stage* s, Bitmap* bmpTileset) {
     sy = (i16)(s->disappearTile / 16);
     sy *= 16;
 
+    if (s->disappearTimer >= m) {
+
+        skip = 1 + (s->disappearTimer - m);
+    }
+    else {
+
+        skip = -1 -(m - s->disappearTimer);
+    }
+
     draw_bitmap_region_fast_skip_lines(bmpTileset, sx, sy, 4, 16,
         s->xoff + s->disappearPos.x * 4,
         s->yoff + s->disappearPos.y * 16, 
-        1 + s->disappearTimer / 2);
+        skip);
 }
 
 

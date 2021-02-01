@@ -210,8 +210,10 @@ void draw_bitmap_region_fast_skip_lines(Bitmap* bmp,
 
     for (i = dy; i < dy + sh; ++ i) {
 
+        // Notice "== 1" on the bottom line.
+        // It is required to maintain a nice effect. (What)
         if ((skip > 0 && i % skip != 0) ||
-            (skip < 0 && i % (-skip) == 0)) {
+            (skip < 0 && i % (-skip) == 1)) {
 
             memcpy((void*)(ADDR[i & 1] + djump), 
                 (void*)((u32)bmp->pixels + sjump), sw);
