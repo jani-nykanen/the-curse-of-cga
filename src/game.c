@@ -156,7 +156,10 @@ bool game_refresh(i16 step) {
         mark_room_visited();
         mapDrawn = false;
     }
-    stage_update(gameStage, step);
+    if (stage_update(gameStage, step)) {
+
+        pl_force_wait(player, gameStage);
+    }
 
     if (keyb_get_normal_key(KEY_Q) == STATE_PRESSED &&
         (keyb_get_normal_key(KEY_LCTRL) & STATE_DOWN_OR_PRESSED)) {

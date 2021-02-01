@@ -51,7 +51,7 @@ Stage* new_stage(Tilemap* baseMap,
     i16 roomWidth, i16 roomHeight, i16 camX, i16 camY);
 void dispose_stage(Stage* s);
 
-void stage_update(Stage* s, i16 step);
+bool stage_update(Stage* s, i16 step);
 
 void stage_draw(Stage* s, Bitmap* bmpTileset);
 void stage_draw_objects(Stage* s, Bitmap* bmpObjects);

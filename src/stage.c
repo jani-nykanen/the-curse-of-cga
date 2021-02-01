@@ -96,7 +96,7 @@ static void start_disappear_animation(Stage* s, u8 tile, i16 x, i16 y) {
 }
 
 
-static void check_confict(Stage* s, i16 x, i16 y) {
+static bool check_confict(Stage* s, i16 x, i16 y) {
 
     // Rock & water
     if (get_tile(s, s->roomTilesDynamic, x, y, 0) == 2 &&
@@ -104,7 +104,10 @@ static void check_confict(Stage* s, i16 x, i16 y) {
 
         set_tile_both(s, x, y, 0);
         start_disappear_animation(s, 22, x, y);
+
+        return true;
     }
+    return false;
 }
 
 
@@ -324,7 +327,7 @@ void dispose_stage(Stage* s) {
 }
 
 
-void stage_update(Stage* s, i16 step) {
+bool stage_update(Stage* s, i16 step) {
 
     i16 moveStep;
     i16 delta;
@@ -342,8 +345,7 @@ void stage_update(Stage* s, i16 step) {
         s->rockAnim->timer -= step;
         if (s->rockAnim->timer <= 0) {
 
-            check_confict(s, s->rockAnim->target.x, s->rockAnim->target.y);
-            return;
+            return check_confict(s, s->rockAnim->target.x, s->rockAnim->target.y);
         }
 
         moveStep = s->rockAnim->startTime / 4;
@@ -361,6 +363,8 @@ void stage_update(Stage* s, i16 step) {
         -- s->disappearTimer;
         stage_mark_tile_for_redraw(s, s->disappearPos.x, s->disappearPos.y);
     }
+
+    return false;
 }
 
 

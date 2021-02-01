@@ -20,6 +20,7 @@ Player create_player(i16 x, i16 y, Stage* s) {
     pl.moveTimer = 0;
     pl.moving = false;
     pl.interacting = false;
+    pl.forcedInteraction = false;
     pl.dir = vec2(0, 0);
 
     pl.spr = create_sprite(4, 16);
@@ -92,6 +93,7 @@ static void pl_control(Player* pl, Stage* s, i16 step) {
 
         pl->moveTimer = INTERACTION_TIME;
         pl->interacting = true;
+        pl->forcedInteraction = false;
         pl->moving = false;
     }
 }
@@ -131,11 +133,14 @@ static bool pl_animate_interaction(Player* pl, i16 step) {
         if ((pl->moveTimer -= step) <= 0) {
 
             pl->interacting = false;
+            pl->forcedInteraction = false;
             spr_set_frame(&pl->spr, 0, pl->spr.row);
         }
         else {
 
-            spr_set_frame(&pl->spr, 4, pl->spr.row);
+            spr_set_frame(&pl->spr, 
+                pl->forcedInteraction ? 0 : 4, 
+                pl->spr.row);
         }
     }
     return pl->interacting;
@@ -260,4 +265,17 @@ void pl_update_stage_tile_buffer(Player* pl, Stage* s) {
             pl->target.x % s->roomWidth, 
             (pl->target.y-i) % s->roomHeight);
     }
+}
+
+
+void pl_force_wait(Player* pl, Stage* s) {
+
+    pl->pos = pl->target;
+    pl->moving = false;
+    pl_compute_render_pos(pl, s);
+
+    pl->interacting = true;
+    pl->forcedInteraction = true;
+    pl->moveTimer = INTERACTION_TIME;
+
 }
