@@ -39,7 +39,10 @@ typedef struct {
     u8* roomTilesStatic;
     u8* roomTilesDynamic;
 
-    MovingRock rockAnim;
+    MovingRock* rockAnim;
+    Vector2 disappearPos;
+    i16 disappearTimer;
+    u8 disappearTile;
 
 } Stage;
 
@@ -52,6 +55,7 @@ void stage_update(Stage* s, i16 step);
 
 void stage_draw(Stage* s, Bitmap* bmpTileset);
 void stage_draw_objects(Stage* s, Bitmap* bmpObjects);
+void stage_draw_effects(Stage* s, Bitmap* bmpTileset);
 
 void stage_mark_tile_for_redraw(Stage* s, i16 x, i16 y);
 

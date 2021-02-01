@@ -312,6 +312,7 @@ void game_redraw() {
     pl_update_stage_tile_buffer(player, gameStage);
     stage_draw(gameStage, bmpTileset);
     stage_draw_objects(gameStage, bmpObjects);
+    stage_draw_effects(gameStage, bmpTileset);
 
     toggle_clipping(true);
     set_clip_rectangle(

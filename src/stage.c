@@ -9,6 +9,9 @@
 #include <string.h>
 
 
+static const DISAPPEAR_TIME = 12;
+
+
 static bool is_solid(u8 v) {
 
     static const bool TABLE[] = {
@@ -85,6 +88,14 @@ static void set_tile_permanent(Stage* s, i16 x, i16 y, u8 v) {
 }
 
 
+static void start_disappear_animation(Stage* s, u8 tile, i16 x, i16 y) {
+
+    s->disappearTimer = DISAPPEAR_TIME;
+    s->disappearTile = tile;
+    s->disappearPos = vec2(x, y);
+}
+
+
 static void check_confict(Stage* s, i16 x, i16 y) {
 
     // Rock & water
@@ -92,6 +103,7 @@ static void check_confict(Stage* s, i16 x, i16 y) {
         get_tile(s, s->roomTilesStatic, x, y, 0) == 3) {
 
         set_tile_both(s, x, y, 0);
+        start_disappear_animation(s, 22, x, y);
     }
 }
 
@@ -275,7 +287,19 @@ Stage* new_stage(Tilemap* baseMap,
     s->yoff = 100 - roomHeight*8;
     s->xoff = 30 - roomWidth*2;
 
-    s->rockAnim.timer = 0;
+    s->rockAnim = (MovingRock*)malloc(sizeof(MovingRock));
+    if (s->rockAnim == NULL) {
+
+        ERR_MALLOC();
+        dispose_stage(s);
+        return NULL;
+    }
+
+    s->rockAnim->timer = 0;
+
+    s->disappearPos = vec2(0, 0);
+    s->disappearTimer = 0;
+    s->disappearTile = 0;
 
     return s;
 }
@@ -293,6 +317,8 @@ void dispose_stage(Stage* s) {
         free(s->roomTilesStatic);
     if (s->roomTilesDynamic != NULL)
         free(s->roomTilesDynamic);    
+    if (s->rockAnim != NULL)
+        free(s->rockAnim);
 
     free(s);
 }
@@ -303,29 +329,37 @@ void stage_update(Stage* s, i16 step) {
     i16 moveStep;
     i16 delta;
 
-    if (s->rockAnim.timer > 0) {
+    // Animate rock
+    if (s->rockAnim->timer > 0) {
 
         stage_mark_tile_for_redraw(s, 
-                s->rockAnim.pos.x, 
-                s->rockAnim.pos.y);
+                s->rockAnim->pos.x, 
+                s->rockAnim->pos.y);
         stage_mark_tile_for_redraw(s, 
-                s->rockAnim.target.x, 
-                s->rockAnim.target.y);
+                s->rockAnim->target.x, 
+                s->rockAnim->target.y);
 
-        s->rockAnim.timer -= step;
-        if (s->rockAnim.timer <= 0) {
+        s->rockAnim->timer -= step;
+        if (s->rockAnim->timer <= 0) {
 
-            check_confict(s, s->rockAnim.target.x, s->rockAnim.target.y);
+            check_confict(s, s->rockAnim->target.x, s->rockAnim->target.y);
             return;
         }
 
-        moveStep = s->rockAnim.startTime / 4;
-        delta = 4 - fixed_round(s->rockAnim.timer, moveStep);
+        moveStep = s->rockAnim->startTime / 4;
+        delta = 4 - fixed_round(s->rockAnim->timer, moveStep);
 
-        s->rockAnim.rpos.x = s->rockAnim.pos.x * 4 + 
-            (s->rockAnim.target.x - s->rockAnim.pos.x) * delta;
-        s->rockAnim.rpos.y = s->rockAnim.pos.y * 16 + 
-            (s->rockAnim.target.y - s->rockAnim.pos.y) * delta * 4;
+        s->rockAnim->rpos.x = s->rockAnim->pos.x * 4 + 
+            (s->rockAnim->target.x - s->rockAnim->pos.x) * delta;
+        s->rockAnim->rpos.y = s->rockAnim->pos.y * 16 + 
+            (s->rockAnim->target.y - s->rockAnim->pos.y) * delta * 4;
+    }
+
+    // Animate disappearing tile
+    if (s->disappearTimer > 0) {
+
+        -- s->disappearTimer;
+        stage_mark_tile_for_redraw(s, s->disappearPos.x, s->disappearPos.y);
     }
 }
 
@@ -349,6 +383,7 @@ static void stage_draw_wall(Stage* s, Bitmap* bmpTileset,
         }
     }
 }
+
 
 
 void stage_draw(Stage* s, Bitmap* bmpTileset) {
@@ -473,9 +508,9 @@ void stage_draw_objects(Stage* s, Bitmap* bmpObjects) {
 
             case 2:
 
-                if (s->rockAnim.timer <= 0 ||
-                    s->rockAnim.target.x != x ||
-                    s->rockAnim.target.y != y) {
+                if (s->rockAnim->timer <= 0 ||
+                    s->rockAnim->target.x != x ||
+                    s->rockAnim->target.y != y) {
 
                     draw_bitmap_region(bmpObjects,
                         0, 0, 4, 16, 
@@ -490,13 +525,31 @@ void stage_draw_objects(Stage* s, Bitmap* bmpObjects) {
         }
     }
 
-    if (s->rockAnim.timer > 0) {
+    if (s->rockAnim->timer > 0) {
 
         draw_bitmap_region(bmpObjects,
             0, 0, 4, 16, 
-            s->xoff + s->rockAnim.rpos.x,
-            s->yoff + s->rockAnim.rpos.y);
+            s->xoff + s->rockAnim->rpos.x,
+            s->yoff + s->rockAnim->rpos.y);
     }
+}
+
+
+void stage_draw_effects(Stage* s, Bitmap* bmpTileset) {
+
+    i16 sx, sy;
+
+    if (s->disappearTimer <= 0) return;
+
+    sx = (i16)(s->disappearTile % 16);
+    sx *= 4;
+    sy = (i16)(s->disappearTile / 16);
+    sy *= 16;
+
+    draw_bitmap_region_fast_skip_lines(bmpTileset, sx, sy, 4, 16,
+        s->xoff + s->disappearPos.x * 4,
+        s->yoff + s->disappearPos.y * 16, 
+        1 + s->disappearTimer / 2);
 }
 
 
@@ -507,6 +560,7 @@ void stage_mark_tile_for_redraw(Stage* s, i16 x, i16 y) {
 
     s->renderBuffer[y * s->roomWidth + x] = true;
 }
+
 
 
 static void swap_walls(Stage* s, i16 dx, i16 dy) {
@@ -541,6 +595,8 @@ static void swap_walls(Stage* s, i16 dx, i16 dy) {
 static void cut_flower(Stage* s, i16 x, i16 y) {
 
     set_tile_both(s, x, y, 0);
+
+    start_disappear_animation(s, 5, x, y);
 }
 
 
@@ -548,12 +604,15 @@ static void break_ice_block(Stage* s, i16 x, i16 y) {
 
     set_tile(s, s->roomTilesStatic, x, y, 0);
     set_tile(s, s->roomTilesDynamic, x, y, 2);
+
+    start_disappear_animation(s, 21, x, y);
 }
 
 
 static void open_lock(Stage* s, i16 x, i16 y) {
 
     set_tile_permanent(s, x, y, 0);
+    start_disappear_animation(s, 6, x, y);
 }
 
 
@@ -576,10 +635,10 @@ u8 stage_movement_collision(Stage* s,
             set_tile(s, s->roomTilesDynamic, x, y, 0);
             set_tile(s, s->roomTilesDynamic, x+dx, y+dy, 2);
 
-            s->rockAnim.pos = vec2(x, y);
-            s->rockAnim.target = vec2(x+dx, y+dy);
-            s->rockAnim.startTime = objectMoveTime;
-            s->rockAnim.timer = objectMoveTime;
+            s->rockAnim->pos = vec2(x, y);
+            s->rockAnim->target = vec2(x+dx, y+dy);
+            s->rockAnim->startTime = objectMoveTime;
+            s->rockAnim->timer = objectMoveTime;
 
             return 1;
         }
@@ -668,6 +727,8 @@ bool stage_check_camera_transition(Stage* s, i16 x, i16 y) {
         gen_wall_tile_map(s);
 
         memset(s->renderBuffer, 1, s->roomWidth * s->roomHeight);
+
+        s->disappearTimer = 0;
 
         return true;
     }

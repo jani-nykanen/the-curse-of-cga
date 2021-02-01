@@ -189,6 +189,40 @@ void draw_bitmap_region_fast(Bitmap* bmp,
 }
 
 
+// For faster performance ordinary fast_region does not
+// call this method with "big enough" skip value
+void draw_bitmap_region_fast_skip_lines(Bitmap* bmp, 
+    i16 sx, i16 sy, i16 sw, i16 sh, 
+    i16 dx, i16 dy, i16 skip) {
+    
+    i16 i;
+    u32 djump;
+    u32 sjump;
+    u16 w = bmp->width / 4;
+
+    djump = (u32)((dy/2)*80 + dx);
+    sjump = (u32)(sy*w + sx);
+
+    if (skip == 0 || (
+        clippingEnabled && 
+        !clip_rect_region(&sx, &sy, &sw, &sh, &dx, &dy)))
+        return;
+
+    for (i = dy; i < dy + sh; ++ i) {
+
+        if ((skip > 0 && i % skip != 0) ||
+            (skip < 0 && i % (-skip) == 0)) {
+
+            memcpy((void*)(ADDR[i & 1] + djump), 
+                (void*)((u32)bmp->pixels + sjump), sw);
+        }
+
+        djump += 80 * (i & 1);
+        sjump += w;
+    }     
+}
+
+
 void draw_text_fast(Bitmap* font, const str text, i16 x, i16 y, bool center) {
 
     draw_text_base(draw_bitmap_region_fast,
