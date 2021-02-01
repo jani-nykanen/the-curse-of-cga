@@ -73,7 +73,8 @@ static void pl_control(Player* pl, Stage* s, i16 step) {
 
         actionType = stage_movement_collision(s, k,
                 pl->pos.x + dx, pl->pos.y + dy, 
-                dx, dy, MOVE_TIME, &pl->battery);
+                dx, dy, MOVE_TIME, 
+                &pl->battery, &pl->keys);
     }
 
     if (actionType == 1) {

@@ -12,7 +12,7 @@
 static bool is_solid(u8 v) {
 
     static const bool TABLE[] = {
-        0, 1, 1, 1, 0, 1, 1, 1, 1, 1,
+        0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1,
 
         // "Overflow" values, remove in the
         // release version
@@ -418,6 +418,13 @@ void stage_draw(Stage* s, Bitmap* bmpTileset) {
                 sy = 16;
                 break;
 
+            // Key hole
+            case 10:
+
+                sx = 24;
+                sy = 0;
+                break;
+
             default:
                 sx = 16;
                 sy = 0;
@@ -544,10 +551,16 @@ static void break_ice_block(Stage* s, i16 x, i16 y) {
 }
 
 
+static void open_lock(Stage* s, i16 x, i16 y) {
+
+    set_tile_permanent(s, x, y, 0);
+}
+
+
 u8 stage_movement_collision(Stage* s, 
     State actionType, i16 x, i16 y, 
     i16 dx, i16 dy, i16 objectMoveTime,
-    u8* interactionLevel) {
+    u8* interactionLevel, u8* keyCount) {
 
     u8 id = get_tile(s, s->roomTilesDynamic, x, y, 0);
     u8 mid;
@@ -603,6 +616,19 @@ u8 stage_movement_collision(Stage* s,
 
             break_ice_block(s, x, y);
             -- (*interactionLevel);
+
+            return 2;
+        }
+        return 0;
+
+    // Key hole
+    case 10:
+
+        if ((*keyCount) > 0 &&
+            actionType == STATE_PRESSED) {
+
+            open_lock(s, x, y);
+            -- (*keyCount);
 
             return 2;
         }
