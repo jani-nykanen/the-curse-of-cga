@@ -166,6 +166,11 @@ static bool pl_tile_check(Player* pl, Stage* s) {
             pl->battery = min_i16(PLAYER_MAX_BATTERY_LEVEL, pl->battery + 3);
             break;
 
+        case 3:
+
+            ++ pl->gems;
+            break;
+
         default:
             break;
         }

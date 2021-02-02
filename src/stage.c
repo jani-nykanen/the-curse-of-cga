@@ -22,7 +22,7 @@ static bool is_solid(u8 v) {
         0, 1, 1, 1, 
         1, 1, 1, 0, 
         0, 0, 0, 1,
-        1,
+        1, 1,
 
         // "Overflow" values, remove in the
         // release version
@@ -44,7 +44,7 @@ static bool is_solid_ignore_water(u8 v) {
 
 static bool is_item(u8 v) {
 
-    return v >= 17;
+    return v >= 18;
 }
 
 
@@ -524,15 +524,23 @@ void stage_draw(Stage* s, Bitmap* bmpTileset) {
                 sy = (tid - 15) * 16;
                 break;
 
+            // Rubble
+            case 17:
+
+                sx = 36;
+                sy = 32;
+                break;
+
             default:
                 sx = 16;
                 sy = 0;
                 break;
             }
 
-            if (tid >= 17) {
+            // Items
+            if (tid >= 18) {
 
-                sx = 4 * (tid - 17);
+                sx = 4 * (tid - 18);
                 sy = 32;
             }
 
@@ -691,6 +699,15 @@ static void open_lock(Stage* s, i16 x, i16 y) {
 }
 
 
+static void remove_rubble(Stage* s, i16 x, i16 y) {
+
+    set_tile(s, s->roomTilesStatic, x, y, 3);
+    set_tile(s, s->roomTilesDynamic, x, y, 3);
+
+    start_disappear_animation(s, 48, x, y);
+}
+
+
 static void swap_automatic_arrows(Stage* s, i16 dx, i16 dy, u8 v) {
 
     static const u8 NEW_VALUE[] = {12, 11, 14, 13};
@@ -788,6 +805,19 @@ u8 stage_movement_collision(Stage* s,
         }
         return 0;
 
+    // Rubble
+    case 17:
+
+        if ((*interactionLevel) > 0 &&
+            actionType == STATE_PRESSED) {
+
+            remove_rubble(s, x, y);
+            -- (*interactionLevel);
+
+            return 2;
+        }
+        return 0;
+
     default:
         break;
     }
@@ -862,12 +892,12 @@ u8 stage_check_overlay(Stage* s, i16 x, i16 y) {
 
     if (is_item(v)) {
 
-        if (v == 17)
+        if (v == 18)
             set_tile_permanent(s, x, y, 0);
         else
             set_tile_both(s, x, y, 0);
 
-        return v - 16;
+        return v - 17;
     }
 
     return 0;
