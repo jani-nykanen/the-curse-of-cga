@@ -18,7 +18,11 @@ static const i16 ARROW_DIRY[] = {-1, 1, 0, 0};
 static bool is_solid(u8 v) {
 
     static const bool TABLE[] = {
-        0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1,
+        0, 1, 1, 1, 
+        0, 1, 1, 1, 
+        1, 1, 1, 0, 
+        0, 0, 0, 1,
+        1,
 
         // "Overflow" values, remove in the
         // release version
@@ -510,7 +514,14 @@ void stage_draw(Stage* s, Bitmap* bmpTileset) {
                 sx = 28 + ((tid - 11) % 2) * 4;
                 sy = (tid - 11) / 2;
                 sy *= 16;
+                break;
 
+            // Arrow flippers
+            case 15:
+            case 16:
+
+                sx = 36;
+                sy = (tid - 15) * 16;
                 break;
 
             default:
@@ -680,6 +691,29 @@ static void open_lock(Stage* s, i16 x, i16 y) {
 }
 
 
+static void swap_automatic_arrows(Stage* s, i16 dx, i16 dy, u8 v) {
+
+    static const u8 NEW_VALUE[] = {12, 11, 14, 13};
+
+    i16 x, y;
+    u8 tid;
+
+    // Swap walls
+    for (y = 0; y < s->roomHeight; ++ y) {
+
+        for (x = 0; x < s->roomWidth; ++ x) {
+
+            tid = get_tile(s, s->roomTilesStatic, x, y, 0);
+            if (tid >= 11 && tid <= 14) {
+
+                set_tile_both(s, x, y, NEW_VALUE[tid - 11]);
+            }
+        }
+    }
+    set_tile_both(s, dx, dy, v == 15 ? 16 : 15);
+}
+
+
 u8 stage_movement_collision(Stage* s, 
     State actionType, i16 x, i16 y, 
     i16 dx, i16 dy, i16 objectMoveTime,
@@ -739,6 +773,17 @@ u8 stage_movement_collision(Stage* s,
             open_lock(s, x, y);
             -- (*keyCount);
 
+            return 2;
+        }
+        return 0;
+
+    // That spinning things
+    case 15:
+    case 16:
+
+        if (actionType == STATE_PRESSED) {
+
+            swap_automatic_arrows(s, x, y, id);
             return 2;
         }
         return 0;
