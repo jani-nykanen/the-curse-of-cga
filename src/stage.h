@@ -67,5 +67,8 @@ u8 stage_check_automatic_movement(Stage* s, i16 x, i16 y, Vector2* target);
 
 bool stage_check_camera_transition(Stage* s, i16 x, i16 y);
 u8 stage_check_overlay(Stage* s, i16 x, i16 y);
+bool stage_check_conflict(Stage* s, i16 x, i16 y);
+
+void stage_mark_tile_solid(Stage* s, i16 x, i16 y, bool state);
 
 #endif // __STAGE__

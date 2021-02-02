@@ -25,7 +25,7 @@ static bool is_solid(u8 v) {
         0, 0, 0, 0, 0, 0, 0, 0
     };
 
-    return TABLE[(i16)v];
+    return v < 32 && TABLE[(i16)v];
 }
 
 
@@ -101,8 +101,9 @@ static void start_disappear_animation(Stage* s, u8 tile, i16 x, i16 y) {
 
 static i16 move_boulder(Stage* s, i16 x, i16 y, i16 dx, i16 dy, i16 objectMoveTime) {
 
-    i16 mid = get_tile(s, s->roomTilesDynamic, x+dx, y+dy, 1);
-    if (!is_solid_ignore_water(mid)) {
+    i16 tid = get_tile(s, s->roomTilesDynamic, x+dx, y+dy, 1);
+    if (tid != 255 &&
+        !is_solid_ignore_water(tid)) {
 
         set_tile(s, s->roomTilesDynamic, x, y, 0);
         set_tile(s, s->roomTilesDynamic, x+dx, y+dy, 2);
@@ -685,7 +686,6 @@ u8 stage_movement_collision(Stage* s,
     u8* interactionLevel, u8* keyCount) {
 
     u8 id = get_tile(s, s->roomTilesDynamic, x, y, 0);
-    u8 mid;
 
     switch (id) {
 
@@ -754,19 +754,19 @@ u8 stage_movement_collision(Stage* s,
 
 u8 stage_check_automatic_movement(Stage* s, i16 x, i16 y, Vector2* target) {
 
-    u8 tid = get_tile(s, s->roomTilesStatic, x, y, 0);
+    i16 tid = (i16)get_tile(s, s->roomTilesStatic, x, y, 0);
     if (tid >= 11 && tid <= 14) {
 
         tid -= 11;
 
         if (stage_movement_collision(s, 
             STATE_DOWN, x, y, 
-            ARROW_DIRX[(i16)tid], 
-            ARROW_DIRY[(i16)tid], 
+            ARROW_DIRX[tid], 
+            ARROW_DIRY[tid], 
             0, NULL, NULL) == 1) {
 
-            target->x = x + ARROW_DIRX[(i16)tid];
-            target->y = y + ARROW_DIRY[(i16)tid];
+            target->x = x + ARROW_DIRX[tid];
+            target->y = y + ARROW_DIRY[tid];
 
             return 1;
         }
@@ -826,4 +826,16 @@ u8 stage_check_overlay(Stage* s, i16 x, i16 y) {
     }
 
     return 0;
+}
+
+
+bool stage_check_conflict(Stage* s, i16 x, i16 y) {
+
+    return is_solid(get_tile(s, s->roomTilesDynamic, x, y, 0));
+}
+
+
+void stage_mark_tile_solid(Stage* s, i16 x, i16 y, bool state) {
+
+    set_tile(s, s->roomTilesDynamic, x, y, 255 * (u8)state);
 }

@@ -181,6 +181,13 @@ static bool pl_tile_check(Player* pl, Stage* s) {
             pl->moving = true;
 
             pl->forcedInteraction = true;
+
+            if (stage_check_conflict(s, pl->target.x, pl->target.y)) {
+
+                pl->target = pl->pos;
+                pl->moving = false;
+                return false;
+            }
         }
     }
 
@@ -253,6 +260,9 @@ bool pl_update(Player* pl, Stage* s, i16 step) {
     pl_compute_render_pos(pl, s);
     pl_animate(pl, step);
     ret = pl_move(pl, s, step);
+
+    stage_mark_tile_solid(s, pl->pos.x, pl->pos.y, false);
+    stage_mark_tile_solid(s, pl->target.x, pl->target.y, true);
     
     return ret;
 }
