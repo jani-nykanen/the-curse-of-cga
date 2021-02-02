@@ -464,6 +464,18 @@ void stage_draw(Stage* s, Bitmap* bmpTileset) {
                 sy = 0;
                 break;
 
+            // Arrows
+            case 11:
+            case 12:
+            case 13:
+            case 14:
+
+                sx = 28 + ((tid - 11) % 2) * 4;
+                sy = (tid - 11) / 2;
+                sy *= 16;
+
+                break;
+
             default:
                 sx = 16;
                 sy = 0;
@@ -713,6 +725,31 @@ u8 stage_movement_collision(Stage* s,
     }
 
     return (u8)!is_solid(id);
+}
+
+
+
+u8 stage_check_automatic_movement(Stage* s, i16 x, i16 y, Vector2* target) {
+
+    static const i16 DIRX[] = {0, 0, -1, 1};
+    static const i16 DIRY[] = {-1, 1, 0, 0};
+
+    u8 tid = get_tile(s, s->roomTilesStatic, x, y, 0);
+    if (tid >= 11 && tid <= 14) {
+
+        tid -= 11;
+
+        if (stage_movement_collision(s, STATE_DOWN, x, y, 
+            DIRX[(i16)tid], DIRY[(i16)tid], 0, NULL, NULL) == 1) {
+
+            target->x = x + DIRX[(i16)tid];
+            target->y = y + DIRY[(i16)tid];
+
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 

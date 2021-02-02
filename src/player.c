@@ -88,6 +88,7 @@ static void pl_control(Player* pl, Stage* s, i16 step) {
 
         pl->moveTimer = MOVE_TIME;
         pl->moving = true;
+        pl->forcedInteraction = false;
     }
     else if (actionType == 2) {
 
@@ -169,6 +170,19 @@ static bool pl_tile_check(Player* pl, Stage* s) {
             break;
         }
     }
+    else {
+
+        if (stage_check_automatic_movement(s, pl->pos.x, pl->pos.y, &pl->target) == 1) {
+
+            pl->dir.x = pl->target.x - pl->pos.x;
+            pl->dir.y = pl->target.y - pl->pos.y;
+
+            pl->moveTimer = MOVE_TIME;
+            pl->moving = true;
+
+            pl->forcedInteraction = true;
+        }
+    }
 
     return false;
 }
@@ -212,13 +226,14 @@ static void pl_animate(Player* pl, i16 step) {
 
     const i16 ANIM_SPEED = 8;
 
+
     if (pl->interacting) {
 
         pl_animate_interaction(pl, step);
         return;
     }
 
-    if (pl->moving) {
+    if (pl->moving && !pl->forcedInteraction) {
 
         spr_animate(&pl->spr, pl->spr.row, 0, 3, ANIM_SPEED, step);
     }
