@@ -11,6 +11,9 @@
 
 static const DISAPPEAR_TIME = 12;
 
+static const i16 ARROW_DIRX[] = {0, 0, -1, 1};
+static const i16 ARROW_DIRY[] = {-1, 1, 0, 0};
+
 
 static bool is_solid(u8 v) {
 
@@ -96,16 +99,49 @@ static void start_disappear_animation(Stage* s, u8 tile, i16 x, i16 y) {
 }
 
 
+static i16 move_boulder(Stage* s, i16 x, i16 y, i16 dx, i16 dy, i16 objectMoveTime) {
+
+    i16 mid = get_tile(s, s->roomTilesDynamic, x+dx, y+dy, 1);
+    if (!is_solid_ignore_water(mid)) {
+
+        set_tile(s, s->roomTilesDynamic, x, y, 0);
+        set_tile(s, s->roomTilesDynamic, x+dx, y+dy, 2);
+
+        s->rockAnim->pos = vec2(x, y);
+        s->rockAnim->target = vec2(x+dx, y+dy);
+        s->rockAnim->startTime = objectMoveTime;
+        s->rockAnim->timer = objectMoveTime;
+
+        return 1;
+    }
+    return 0;
+}
+
+
 static bool check_confict(Stage* s, i16 x, i16 y) {
 
-    // Rock & water
-    if (get_tile(s, s->roomTilesDynamic, x, y, 0) == 2 &&
-        get_tile(s, s->roomTilesStatic, x, y, 0) == 3) {
+    u8 tid;
 
-        set_tile_both(s, x, y, 0);
-        start_disappear_animation(s, 22, x, y);
+    // Rock and something
+    if (get_tile(s, s->roomTilesDynamic, x, y, 0) == 2) {
 
-        return true;
+        tid = get_tile(s, s->roomTilesStatic, x, y, 0);
+
+        // Rock & water
+        if (tid == 3) {
+
+            set_tile_both(s, x, y, 0);
+            start_disappear_animation(s, 22, x, y);
+
+            return true;
+        }
+        // Rock & automatic arrows
+        else if (tid >= 11 && tid <= 14) {
+
+            return move_boulder(s, x, y, 
+                ARROW_DIRX[tid-11], ARROW_DIRY[tid-11], 
+                s->rockAnim->startTime) == 1;
+        }
     }
     return false;
 }
@@ -656,20 +692,7 @@ u8 stage_movement_collision(Stage* s,
     // Rock
     case 2:
 
-        mid = get_tile(s, s->roomTilesDynamic, x+dx, y+dy, 1);
-        if (!is_solid_ignore_water(mid)) {
-
-            set_tile(s, s->roomTilesDynamic, x, y, 0);
-            set_tile(s, s->roomTilesDynamic, x+dx, y+dy, 2);
-
-            s->rockAnim->pos = vec2(x, y);
-            s->rockAnim->target = vec2(x+dx, y+dy);
-            s->rockAnim->startTime = objectMoveTime;
-            s->rockAnim->timer = objectMoveTime;
-
-            return 1;
-        }
-        return 0;
+        return move_boulder(s, x, y, dx, dy, objectMoveTime);
 
     // Bolt
     case 6:
@@ -731,19 +754,19 @@ u8 stage_movement_collision(Stage* s,
 
 u8 stage_check_automatic_movement(Stage* s, i16 x, i16 y, Vector2* target) {
 
-    static const i16 DIRX[] = {0, 0, -1, 1};
-    static const i16 DIRY[] = {-1, 1, 0, 0};
-
     u8 tid = get_tile(s, s->roomTilesStatic, x, y, 0);
     if (tid >= 11 && tid <= 14) {
 
         tid -= 11;
 
-        if (stage_movement_collision(s, STATE_DOWN, x, y, 
-            DIRX[(i16)tid], DIRY[(i16)tid], 0, NULL, NULL) == 1) {
+        if (stage_movement_collision(s, 
+            STATE_DOWN, x, y, 
+            ARROW_DIRX[(i16)tid], 
+            ARROW_DIRY[(i16)tid], 
+            0, NULL, NULL) == 1) {
 
-            target->x = x + DIRX[(i16)tid];
-            target->y = y + DIRY[(i16)tid];
+            target->x = x + ARROW_DIRX[(i16)tid];
+            target->y = y + ARROW_DIRY[(i16)tid];
 
             return 1;
         }

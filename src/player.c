@@ -5,8 +5,8 @@
 #include "util.h"
 
 
-static const i16 MOVE_TIME = 20;
-static const i16 INTERACTION_TIME = 20;
+#define MOVE_TIME 20
+static const i16 INTERACTION_TIME = MOVE_TIME + 1;
 
 
 Player create_player(i16 x, i16 y, Stage* s) {
