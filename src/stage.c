@@ -8,8 +8,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+static const u8 ITEM_START_INDEX = 33;
 
-static const DISAPPEAR_TIME = 12;
+static const i16 DISAPPEAR_TIME = 12;
 
 static const i16 ARROW_DIRX[] = {0, 0, -1, 1};
 static const i16 ARROW_DIRY[] = {-1, 1, 0, 0};
@@ -22,14 +23,16 @@ static bool is_solid(u8 v) {
         0, 1, 1, 1, 
         1, 1, 1, 0, 
         0, 0, 0, 1,
-        1, 1,
+        1, 1, 1, 1,
 
         // "Overflow" values, remove in the
         // release version
-        0, 0, 0, 0, 0, 0, 0, 0
+        0, 0, 0, 0, 
+        0, 0, 0, 0,
+        0, 0, 0, 0,
     };
 
-    return v < 32 && TABLE[(i16)v];
+    return v < ITEM_START_INDEX && TABLE[(i16)v];
 }
 
 
@@ -44,7 +47,7 @@ static bool is_solid_ignore_water(u8 v) {
 
 static bool is_item(u8 v) {
 
-    return v >= 18;
+    return v >= ITEM_START_INDEX;
 }
 
 
@@ -91,7 +94,8 @@ static void set_tile_both(Stage* s, i16 x, i16 y, u8 v) {
 static void set_tile_permanent(Stage* s, i16 x, i16 y, u8 v) {
 
     set_tile_both(s, x, y, v);
-    tmap_set_tile(s->baseMap, 0, x, y, v);
+    tmap_set_tile(s->baseMap, 0, 
+        s->camPos.x + x, s->camPos.y + y, v);
 }
 
 
@@ -531,6 +535,14 @@ void stage_draw(Stage* s, Bitmap* bmpTileset) {
                 sy = 32;
                 break;
 
+            // Gem holders
+            case 18:
+            case 19:
+
+                sx = 40;
+                sy = (tid - 18) * 16;
+                break;
+
             default:
                 sx = 16;
                 sy = 0;
@@ -538,9 +550,9 @@ void stage_draw(Stage* s, Bitmap* bmpTileset) {
             }
 
             // Items
-            if (tid >= 18) {
+            if (tid >= ITEM_START_INDEX) {
 
-                sx = 4 * (tid - 18);
+                sx = 4 * (tid - ITEM_START_INDEX);
                 sy = 32;
             }
 
@@ -708,6 +720,13 @@ static void remove_rubble(Stage* s, i16 x, i16 y) {
 }
 
 
+static void set_gem(Stage* s, i16 x, i16 y) {
+
+    set_tile_permanent(s, x, y, 19);
+}
+
+
+
 static void swap_automatic_arrows(Stage* s, i16 dx, i16 dy, u8 v) {
 
     static const u8 NEW_VALUE[] = {12, 11, 14, 13};
@@ -734,7 +753,7 @@ static void swap_automatic_arrows(Stage* s, i16 dx, i16 dy, u8 v) {
 u8 stage_movement_collision(Stage* s, 
     State actionType, i16 x, i16 y, 
     i16 dx, i16 dy, i16 objectMoveTime,
-    u8* interactionLevel, u8* keyCount) {
+    u8* interactionLevel, u8* keyCount, u8* gemCount) {
 
     u8 id = get_tile(s, s->roomTilesDynamic, x, y, 0);
 
@@ -818,6 +837,19 @@ u8 stage_movement_collision(Stage* s,
         }
         return 0;
 
+    // Gem holder
+    case 18:
+
+        if ((*gemCount) > 0 &&
+            actionType == STATE_PRESSED) {
+
+            set_gem(s, x, y);
+            -- (*gemCount);
+
+            return 2;
+        }
+        return 0;
+
     default:
         break;
     }
@@ -838,7 +870,7 @@ u8 stage_check_automatic_movement(Stage* s, i16 x, i16 y, Vector2* target) {
             STATE_DOWN, x, y, 
             ARROW_DIRX[tid], 
             ARROW_DIRY[tid], 
-            0, NULL, NULL) == 1) {
+            0, NULL, NULL, NULL) == 1) {
 
             target->x = x + ARROW_DIRX[tid];
             target->y = y + ARROW_DIRY[tid];
@@ -846,7 +878,6 @@ u8 stage_check_automatic_movement(Stage* s, i16 x, i16 y, Vector2* target) {
             return 1;
         }
     }
-
     return 0;
 }
 
@@ -892,12 +923,12 @@ u8 stage_check_overlay(Stage* s, i16 x, i16 y) {
 
     if (is_item(v)) {
 
-        if (v == 18)
+        if (v == ITEM_START_INDEX || v == ITEM_START_INDEX+2)
             set_tile_permanent(s, x, y, 0);
         else
             set_tile_both(s, x, y, 0);
 
-        return v - 17;
+        return v - (ITEM_START_INDEX-1);
     }
 
     return 0;

@@ -61,7 +61,7 @@ void stage_mark_tile_for_redraw(Stage* s, i16 x, i16 y);
 
 u8 stage_movement_collision(Stage* s, State actionType,
     i16 x, i16 y, i16 dx, i16 dy, i16 objectMoveTime,
-    u8* interactionLevel, u8* keyCount);
+    u8* interactionLevel, u8* keyCount, u8* gemCount);
 
 u8 stage_check_automatic_movement(Stage* s, i16 x, i16 y, Vector2* target);
 
