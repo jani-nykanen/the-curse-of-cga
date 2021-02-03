@@ -22,17 +22,17 @@ static void compute_max_dimensions(const str msg, u16* w, u16* h) {
 
         if (msg[i] == '\n') {
 
-            if (len > 0 && len-1 > maxWidth)
-                maxWidth = len-1;
+            if (len > maxWidth)
+                maxWidth = len;
             len = 0;
-
             ++ height;
+            continue;
         }
         ++ len;
     }
 
-    if (len > 0 && len-1 > maxWidth)
-        maxWidth = len-1;
+    if (len > maxWidth)
+        maxWidth = len;
 
     *w = maxWidth;
     *h = height;

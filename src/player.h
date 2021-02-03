@@ -26,6 +26,8 @@ typedef struct {
     u8 keys;
     u8 gems;
     u8 battery;
+    
+    u8 spcItems[6];
 
 } Player;
 

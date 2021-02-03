@@ -4,9 +4,23 @@
 #include "keyb.h"
 #include "util.h"
 
+#include <string.h>
+
 
 #define MOVE_TIME 20
 static const i16 INTERACTION_TIME = MOVE_TIME + 1;
+
+
+static const str ITEM_MESSAGES[] = {
+    "You obtain a POWER\nGLOVE! Time to\nmove some rocks!",
+    "You obtain a HAMMER!\nTime to smash things!",
+    "You obtain a WRENCH!\nTime to turn things!",
+    
+    "You obtain ELECTRIC\nSCISSORS! Time\nto cut bushes!\nConsumes battery." ,
+    "You obtain a\nBLOWTORCH! Time\nto melt ice!\nConsumes battery.\nFor some reason.",
+    "You obtain a SHOVEL!\nTime to shovel some\nrubble! Consumes\nbattery. Don't ask\nwhy."
+};
+
 
 
 Player create_player(i16 x, i16 y, Stage* s) {
@@ -28,6 +42,8 @@ Player create_player(i16 x, i16 y, Stage* s) {
     pl.keys = 0;
     pl.gems = 0;
     pl.battery = 0;
+
+    memset(pl.spcItems, 6, 0);
 
     return pl;
 }
@@ -150,7 +166,11 @@ static bool pl_animate_interaction(Player* pl, i16 step) {
 
 static void pl_obtain_special_item(Player* pl, MessageBox* box, u8 index) {
 
-    msg_build(box, "You obtain a new\nitem! It does some-\nthing cool, I'm\nsure of it!");
+    // Why casting to (i16)? Watcom gives warnings otherwise,
+    // like having a u8 as an array subscript was a crime...
+    msg_build(box, ITEM_MESSAGES[(i16)index]);
+
+    pl->spcItems[(i16)index] = 1;
 }
 
 
