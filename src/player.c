@@ -148,7 +148,13 @@ static bool pl_animate_interaction(Player* pl, i16 step) {
 }
 
 
-static bool pl_tile_check(Player* pl, Stage* s) {
+static void pl_obtain_special_item(Player* pl, MessageBox* box, u8 index) {
+
+    msg_build(box, "You obtain a new\nitem! It does some-\nthing cool, I'm\nsure of it!");
+}
+
+
+static bool pl_tile_check(Player* pl, MessageBox* box, Stage* s) {
 
     u8 res = stage_check_overlay(s, pl->pos.x, pl->pos.y);
     
@@ -173,6 +179,11 @@ static bool pl_tile_check(Player* pl, Stage* s) {
 
         default:
             break;
+        }
+
+        if (res >= 4) {
+
+            pl_obtain_special_item(pl, box, res-4);
         }
     }
     else {
@@ -200,7 +211,7 @@ static bool pl_tile_check(Player* pl, Stage* s) {
 }
 
 
-static bool pl_move(Player* pl, Stage* s, i16 step) {
+static bool pl_move(Player* pl, Stage* s, MessageBox* box, i16 step) {
 
     i16 moveStep = MOVE_TIME / 4;
     i16 delta;
@@ -214,7 +225,7 @@ static bool pl_move(Player* pl, Stage* s, i16 step) {
 
         pl->moving = false;
         pl->pos = pl->target;
-        pl_tile_check(pl, s);
+        pl_tile_check(pl, box, s);
 
         pl_compute_render_pos(pl, s);
 
@@ -257,14 +268,14 @@ static void pl_animate(Player* pl, i16 step) {
 
 
 
-bool pl_update(Player* pl, Stage* s, i16 step) {
+bool pl_update(Player* pl, Stage* s, MessageBox* box, i16 step) {
     
     bool ret = false;
 
     pl_control(pl, s, step);
     pl_compute_render_pos(pl, s);
     pl_animate(pl, step);
-    ret = pl_move(pl, s, step);
+    ret = pl_move(pl, s, box, step);
 
     stage_mark_tile_solid(s, pl->pos.x, pl->pos.y, false);
     stage_mark_tile_solid(s, pl->target.x, pl->target.y, true);

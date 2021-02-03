@@ -19,6 +19,8 @@ static u8 oldExt [KEY_BUFFER_SIZE];
 static bool normalRead [KEY_BUFFER_SIZE];
 static bool extRead [KEY_BUFFER_SIZE];
 
+static bool anyPressed;
+
 
 static void far interrupt (*oldHandler) (void) = NULL;
 
@@ -41,8 +43,11 @@ static void far interrupt handler() {
             oldExt[scancode] = extKeys[scancode];
             extKeys[scancode] = makeBreak;
 
-            if (extKeys[scancode] != oldExt[scancode])
+            if (extKeys[scancode] != oldExt[scancode]) {
+
+                anyPressed = makeBreak;
                 extRead[scancode] = false;
+            }
         }
         buffer = 0;
     } 
@@ -59,8 +64,12 @@ static void far interrupt handler() {
         oldNormals[scancode] = normalKeys[scancode];
         normalKeys[scancode] = makeBreak;
 
-        if (normalKeys[scancode] != oldNormals[scancode])
+        if (normalKeys[scancode] != oldNormals[scancode]) {
+
+            anyPressed = makeBreak;
             normalRead[scancode] = false;
+        }
+        
     }
 
     outp(0x20, 0x20);
@@ -87,12 +96,12 @@ static i8 get_value_from_array(u8* arr, bool* readArr, i16 id) {
 }
 
 
-
-
 void init_keyboard_listener() {
 
     oldHandler = _dos_getvect(0x09);
     _dos_setvect(0x09, handler);
+
+    anyPressed = false;
 }
 
 
@@ -103,6 +112,18 @@ void reset_keyboard_listener() {
         _dos_setvect(0x09, oldHandler);
         oldHandler = NULL;
     }
+}
+
+
+void keyb_update() {
+
+    anyPressed = false;
+}
+
+
+bool keyb_any_pressed() {
+
+    return anyPressed;
 }
 
 

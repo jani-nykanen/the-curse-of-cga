@@ -70,13 +70,17 @@ static bool clip_rect_region(
 
 static void draw_text_base(
     void (*draw_func) (Bitmap*, i16, i16, i16, i16, i16, i16),
-    Bitmap* font, const str text, i16 x, i16 y, bool center) {
+    Bitmap* font, const str text, 
+    i16 x, i16 y, i16 endIndex, bool center) {
 
     i16 dx, dy;
     i16 sx, sy;
     i16 i = 0;
     i16 d = font->width / 16;
     char c;
+
+    if (endIndex < 0)
+        endIndex = strlen(text);
 
     if (center) {
 
@@ -85,7 +89,7 @@ static void draw_text_base(
     dx = x;
     dy = y;
 
-    while ((c = text[i ++]) != '\0') {
+    while ((c = text[i ++]) != '\0' && i < endIndex) {
 
         if (c == '\n') {
 
@@ -101,6 +105,7 @@ static void draw_text_base(
             sx*(d / 4), sy*d, 
             d / 4, d,
             dx, dy);
+        
 
         dx += d / 4;
     }
@@ -225,10 +230,11 @@ void draw_bitmap_region_fast_skip_lines(Bitmap* bmp,
 }
 
 
-void draw_text_fast(Bitmap* font, const str text, i16 x, i16 y, bool center) {
+void draw_text_fast(Bitmap* font, const str text, 
+    i16 x, i16 y, u16 endIndex, bool center) {
 
     draw_text_base(draw_bitmap_region_fast,
-        font, text, x, y, center);
+        font, text, x, y, endIndex, center);
 }
 
 
@@ -274,10 +280,10 @@ void draw_bitmap_region(Bitmap* bmp,
 }
 
 
-void draw_text(Bitmap* font, const str text, i16 x, i16 y, bool center) {
+void draw_text(Bitmap* font, const str text, i16 x, i16 y, i16 endIndex, bool center) {
 
     draw_text_base(draw_bitmap_region,
-        font, text, x, y, center);
+        font, text, x, y, endIndex, center);
 }
 
 

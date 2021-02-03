@@ -8,6 +8,7 @@
 #include "stage.h"
 #include "util.h"
 #include "player.h"
+#include "msgbox.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,6 +44,7 @@ static Bitmap* bmpLogo = NULL;
 
 static Stage* gameStage;
 static Player* player;
+static MessageBox* msgBox;
 
 static u8* visitedRooms;
 
@@ -131,6 +133,9 @@ bool init_game_scene() {
     alloc_object(player, Player, true);
     *player = create_player(1, 1, gameStage);
 
+    alloc_object(msgBox, MessageBox, true);
+    *msgBox = create_message_box();
+
     visitedRooms = (u8*)malloc(ROOM_COUNT_X * ROOM_COUNT_Y);
     if (visitedRooms == NULL) {
 
@@ -151,7 +156,23 @@ bool init_game_scene() {
 
 bool game_refresh(i16 step) {
 
-    if (pl_update(player, gameStage, step)) {
+    // TODO: Move this elsewhere (or remove in the release build?)
+    if (keyb_get_normal_key(KEY_Q) == STATE_PRESSED &&
+        (keyb_get_normal_key(KEY_LCTRL) & STATE_DOWN_OR_PRESSED)) {
+
+        return true;
+    }
+
+    if (msgBox->active) {
+
+        if (msg_update(msgBox, step)) {
+
+            stage_redraw_all(gameStage);
+        }
+        return false;
+    }
+
+    if (pl_update(player, gameStage, msgBox, step)) {
 
         mark_room_visited();
         mapDrawn = false;
@@ -161,11 +182,6 @@ bool game_refresh(i16 step) {
         pl_force_wait(player, gameStage);
     }
 
-    if (keyb_get_normal_key(KEY_Q) == STATE_PRESSED &&
-        (keyb_get_normal_key(KEY_LCTRL) & STATE_DOWN_OR_PRESSED)) {
-
-        return true;
-    }
 
     return false;
 }
@@ -173,11 +189,10 @@ bool game_refresh(i16 step) {
 
 static void draw_map_frame(i16 x, i16 y) {
 
-
     draw_frame(bmpHUD, x, y, MAP_WIDTH, MAP_HEIGHT, 6, 1, false);
     fill_rect(x, y, MAP_WIDTH, MAP_HEIGHT, 0);
 
-    draw_text_fast(bmpFont, "MAP:", 80-11, y-15, true);
+    draw_text_fast(bmpFont, "MAP:", 80-11, y-15, -1, true);
 }
 
 
@@ -226,7 +241,7 @@ static void draw_treasure(i16 x, i16 y) {
         // Keys
         snprintf(buffer, 8, "\2%d", player->keys);
         draw_bitmap_region_fast(bmpHUD, 0, 24, 4, 16, x, y);
-        draw_text_fast(bmpFont, buffer, x+4, y+4, false);
+        draw_text_fast(bmpFont, buffer, x+4, y+4, -1, false);
 
         oldKeys = player->keys;
     }
@@ -236,7 +251,7 @@ static void draw_treasure(i16 x, i16 y) {
         // Gems
         snprintf(buffer, 8, "\2%d", player->gems);
         draw_bitmap_region_fast(bmpHUD, 4, 24, 4, 16, x+10, y);
-        draw_text_fast(bmpFont, buffer, x+14, y+4, false);
+        draw_text_fast(bmpFont, buffer, x+14, y+4, -1, false);
 
         oldGems = player->gems;
     }
@@ -274,10 +289,10 @@ static void draw_hud_static() {
     draw_map_frame(MAP_X, MAP_Y);
 
     // Treasure & items
-    draw_text_fast(bmpFont, "TREASURE:", 80-11, 134, true);
+    draw_text_fast(bmpFont, "TREASURE:", 80-11, 134, -1, true);
 
     // Battery
-    draw_text_fast(bmpFont, "BATTERY:", 80-11, 172-8, true);
+    draw_text_fast(bmpFont, "BATTERY:", 80-11, 172-8, -1, true);
 }
 
 
@@ -303,6 +318,15 @@ static void draw_hud_changing() {
 
 
 void game_redraw() {
+
+    if (msgBox->active) {
+
+        msg_draw(msgBox, bmpFont,
+            gameStage->xoff, gameStage->yoff,
+            gameStage->roomWidth*4, 
+            gameStage->roomHeight*16);
+        return;
+    }
 
     if (!bgDrawn) {
 
@@ -348,4 +372,7 @@ void dispose_game_scene() {
 
     if (visitedRooms != NULL)
         free(visitedRooms);
+
+    if (msgBox != NULL)
+        free(msgBox);
 }

@@ -59,7 +59,7 @@ static u8 get_tile(Stage* s, u8* arr, i16 x, i16 y, u8 def) {
     return arr[y * s->roomWidth + x];
 }
 
-
+/*
 static u8 get_tile_either(Stage* s, i16 x, i16 y, u8 def) {
 
     u8 id = get_tile(s, s->roomTilesStatic, x, y, def);
@@ -68,6 +68,7 @@ static u8 get_tile_either(Stage* s, i16 x, i16 y, u8 def) {
 
     return id;
 }
+*/
 
 
 static void set_tile(Stage* s, u8* arr, i16 x, i16 y, u8 v) {
@@ -656,6 +657,11 @@ void stage_mark_tile_for_redraw(Stage* s, i16 x, i16 y) {
     s->renderBuffer[y * s->roomWidth + x] = true;
 }
 
+
+void stage_redraw_all(Stage* s) {
+
+    memset(s->renderBuffer, 1, s->roomWidth * s->roomHeight);
+}
 
 
 static void swap_walls(Stage* s, i16 dx, i16 dy) {

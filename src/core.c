@@ -28,6 +28,7 @@ static bool main_loop(i16 frameSkip) {
             if (cbRefresh(frameSkip+1))
                 return true;
         }
+        keyb_update();
 
         vblank();
 

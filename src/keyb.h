@@ -20,6 +20,9 @@ typedef enum {
 void init_keyboard_listener();
 void reset_keyboard_listener();
 
+void keyb_update();
+bool keyb_any_pressed();
+
 State keyb_get_normal_key(u8 key);
 State keyb_get_ext_key(u8 key);
 

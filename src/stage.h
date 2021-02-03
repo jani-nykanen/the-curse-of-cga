@@ -58,6 +58,7 @@ void stage_draw_objects(Stage* s, Bitmap* bmpObjects);
 void stage_draw_effects(Stage* s, Bitmap* bmpTileset);
 
 void stage_mark_tile_for_redraw(Stage* s, i16 x, i16 y);
+void stage_redraw_all(Stage* s);
 
 u8 stage_movement_collision(Stage* s, State actionType,
     i16 x, i16 y, i16 dx, i16 dy, i16 objectMoveTime,
