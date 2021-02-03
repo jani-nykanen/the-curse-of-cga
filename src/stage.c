@@ -923,10 +923,10 @@ u8 stage_check_overlay(Stage* s, i16 x, i16 y) {
 
     if (is_item(v)) {
 
-        if (v == ITEM_START_INDEX || v == ITEM_START_INDEX+2)
-            set_tile_permanent(s, x, y, 0);
-        else
+        if (v == ITEM_START_INDEX+1)
             set_tile_both(s, x, y, 0);
+        else
+            set_tile_permanent(s, x, y, 0);
 
         return v - (ITEM_START_INDEX-1);
     }
