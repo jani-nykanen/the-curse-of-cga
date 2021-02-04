@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 
 static const i16 MAP_X = 80-19;
@@ -24,6 +25,7 @@ static const i16 ROOM_COUNT_Y = 5;
 static const i16 MAP_WIDTH = 15;
 static const i16 MAP_HEIGHT = 48;
 
+static const i16 TRANSITION_TIME = 30;
 
 
 //
@@ -51,6 +53,9 @@ static u8* visitedRooms;
 static u8 oldKeys;
 static u8 oldGems;
 static u8 oldBatteryLevel;
+
+static i16 transitionTimer;
+static u8 transitionMode;
 
 
 static void draw_frame(Bitmap* bmp, i16 x, i16 y, i16 w, i16 h, 
@@ -106,6 +111,8 @@ static void mark_room_visited() {
 
 bool init_game_scene() {
 
+    Vector2 startPos;
+
     bgDrawn = false;
     mapDrawn = false;
 
@@ -124,14 +131,15 @@ bool init_game_scene() {
         return true;
     }
 
-    gameStage = new_stage(baseMap, 12, 10, 0, 0);
+    gameStage = new_stage(baseMap, 12, 10, &startPos);
     if (gameStage == NULL) {
 
         return true;
     }
+    stage_flush_redraw_buffer(gameStage);
 
     alloc_object(player, Player, true);
-    *player = create_player(1, 1, gameStage);
+    *player = create_player(startPos.x, startPos.y, gameStage);
 
     alloc_object(msgBox, MessageBox, true);
     *msgBox = create_message_box();
@@ -150,6 +158,9 @@ bool init_game_scene() {
     oldGems = 255;
     oldBatteryLevel = 255;
 
+    transitionTimer = 0;
+    transitionMode = 2;
+
     return false;
 }
 
@@ -163,6 +174,27 @@ bool game_refresh(i16 step) {
         return true;
     }
 
+    if (transitionMode != 0) {
+
+        if ((transitionTimer -= step) <= 0) {
+
+            if ((-- transitionMode) > 0) {
+
+                // TODO: Callback function?
+                stage_reset_room(gameStage);
+                stage_flush_redraw_buffer(gameStage);
+                pl_reset(player, gameStage);
+
+                transitionTimer += TRANSITION_TIME;
+            }
+            else {
+
+                stage_redraw_all(gameStage);
+            }
+        }
+        return false;
+    }
+
     if (msgBox->active) {
 
         if (msg_update(msgBox, step)) {
@@ -174,8 +206,8 @@ bool game_refresh(i16 step) {
 
     if (keyb_get_normal_key(KEY_R) == STATE_PRESSED) {
 
-        stage_reset_room(gameStage);
-        pl_reset(player, gameStage);
+        transitionTimer = TRANSITION_TIME;
+        transitionMode = 2;
         return false;
     }
 
@@ -188,7 +220,6 @@ bool game_refresh(i16 step) {
 
         pl_force_wait(player, gameStage);
     }
-
 
     return false;
 }
@@ -284,11 +315,19 @@ static void draw_battery(i16 x, i16 y) {
 static void draw_hud_static() {
 
     clear_screen(1);
-        draw_frame(bmpHUD, gameStage->xoff, gameStage->yoff,
-            gameStage->roomWidth*4,
-            gameStage->roomHeight*16, 
-            0, 0, true);
 
+    // Needed for the initial black bar effect
+    fill_rect(gameStage->xoff, 
+        gameStage->yoff,
+        gameStage->roomWidth * 4, 
+        gameStage->roomHeight*16, 0);
+
+    draw_frame(bmpHUD, gameStage->xoff, gameStage->yoff,
+        gameStage->roomWidth*4,
+        gameStage->roomHeight*16, 
+        0, 0, true);
+
+        
     // Logo
     draw_bitmap_fast(bmpLogo, 80 - 21, 0);
 
@@ -324,6 +363,56 @@ static void draw_hud_changing() {
 }
 
 
+static void set_clipping_area() {
+
+    toggle_clipping(true);
+    set_clip_rectangle(
+        gameStage->xoff, 
+        gameStage->yoff,
+        gameStage->roomWidth * 4, 
+        gameStage->roomHeight*16);
+}
+
+
+static void draw_transition() {
+
+    i16 x = gameStage->xoff;
+    i16 y = gameStage->yoff;
+
+    i16 w = gameStage->roomWidth * 4;
+    i16 h = gameStage->roomHeight * 16;
+
+    i16 trHeight = transitionTimer / 6;
+    i16 i;
+
+    if (transitionMode == 2) {
+
+        trHeight = 5 - trHeight;
+        for (i = 0; i < trHeight; ++ i) {
+
+            fill_rect(x, y + i*16, w, 16, 0);
+            fill_rect(x, y + h - (i+1)*16, w, 16, 0);
+        }
+    }
+    else {
+
+        stage_partial_redraw(gameStage, trHeight);
+        stage_partial_redraw(gameStage, gameStage->roomHeight - trHeight -1);
+        
+        stage_draw(gameStage, bmpTileset);
+        stage_draw_objects(gameStage, bmpObjects);
+
+        
+        if ((i16)abs(player->pos.y - gameStage->roomHeight/2) < 5 - trHeight) {
+
+            set_clipping_area();
+            pl_draw(player, bmpFigure);
+            toggle_clipping(false);
+        }
+    }
+}
+
+
 void game_redraw() {
 
     if (msgBox->active) {
@@ -343,20 +432,19 @@ void game_redraw() {
 
     draw_hud_changing();
 
+    if (transitionMode != 0) {
+
+        draw_transition();
+        return;
+    }
+
     pl_update_stage_tile_buffer(player, gameStage);
     stage_draw(gameStage, bmpTileset);
     stage_draw_objects(gameStage, bmpObjects);
     stage_draw_effects(gameStage, bmpTileset);
 
-    toggle_clipping(true);
-    set_clip_rectangle(
-        gameStage->xoff, 
-        gameStage->yoff,
-        gameStage->roomWidth * 4, 
-        gameStage->roomHeight*16);
-
+    set_clipping_area();
     pl_draw(player, bmpFigure);
-
     toggle_clipping(false);
 }
 

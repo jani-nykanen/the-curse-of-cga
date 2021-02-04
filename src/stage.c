@@ -286,7 +286,7 @@ static void gen_wall_tile_map(Stage* s) {
 
 
 Stage* new_stage(Tilemap* baseMap, 
-    i16 roomWidth, i16 roomHeight, i16 camX, i16 camY) {
+    i16 roomWidth, i16 roomHeight, Vector2* startPos) {
 
     Stage* alloc_object(s, Stage, NULL);
 
@@ -301,7 +301,8 @@ Stage* new_stage(Tilemap* baseMap,
     s->baseMap = baseMap;
     s->roomWidth = roomWidth;
     s->roomHeight = roomHeight;
-    s->camPos = vec2(camX, camY);
+
+    *startPos = stage_find_player(s);
 
     // Static tiles for objects that cannot be moved,
     // and that can be overlaid
@@ -312,7 +313,7 @@ Stage* new_stage(Tilemap* baseMap,
         return NULL;
     }
     tmap_clone_area(baseMap, s->roomTilesStatic,
-        0, camX, camY, roomWidth, roomHeight);
+        0, s->camPos.x, s->camPos.y, roomWidth, roomHeight);
 
     // Dynamic objects may overlay static ones
     s->roomTilesDynamic = (u8*)malloc(roomWidth * roomHeight);
@@ -978,4 +979,41 @@ void stage_reset_room(Stage* s) {
 
     s->rockAnim->timer = 0;
     s->disappearTimer = 0;
+}
+
+
+void stage_flush_redraw_buffer(Stage* s) {
+
+    memset(s->renderBuffer, 0, s->roomWidth * s->roomHeight);
+}
+
+
+void stage_partial_redraw(Stage* s, i16 row) {
+
+    if (row < 0 || row >= s->roomHeight) return;
+
+    memset(s->renderBuffer + (u32)(row * s->roomWidth), 1, s->roomWidth);
+}
+
+
+Vector2 stage_find_player(Stage* s) {
+
+    i16 x, y;
+
+    for (y = 0; y < s->baseMap->height; ++ y) {
+
+        for (x = 0; x < s->baseMap->width; ++ x) {
+
+            if (tmap_get_tile(s->baseMap, 0, x, y, 0) == 32) {
+
+                s->camPos = vec2(x / s->roomWidth, y / s->roomHeight);
+                s->camPos.x *= s->roomWidth;
+                s->camPos.y *= s->roomHeight;
+
+                return vec2(x % s->roomWidth, y % s->roomHeight);
+            }
+        }
+    }
+
+    return vec2(0, 0);
 }

@@ -48,7 +48,7 @@ typedef struct {
 
 
 Stage* new_stage(Tilemap* baseMap, 
-    i16 roomWidth, i16 roomHeight, i16 camX, i16 camY);
+    i16 roomWidth, i16 roomHeight, Vector2* startPos);
 void dispose_stage(Stage* s);
 
 bool stage_update(Stage* s, i16 step);
@@ -73,5 +73,10 @@ bool stage_check_conflict(Stage* s, i16 x, i16 y);
 void stage_mark_tile_solid(Stage* s, i16 x, i16 y, bool state);
 
 void stage_reset_room(Stage* s);
+
+void stage_flush_redraw_buffer(Stage* s);
+void stage_partial_redraw(Stage* s, i16 row);
+
+Vector2 stage_find_player(Stage* s);
 
 #endif // __STAGE__
