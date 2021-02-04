@@ -80,11 +80,11 @@ bool msg_update(MessageBox* box, i16 step){
 
     if (!box->active) return false;
 
-    if (box->charPointer <= box->bufferLen) {
+    if (box->charPointer < box->bufferLen) {
 
         if (box->charPointer > 0 && keyb_any_pressed()) {
 
-            box->charPointer = box->bufferLen + 1;
+            box->charPointer = box->bufferLen;
         }
         else {
 

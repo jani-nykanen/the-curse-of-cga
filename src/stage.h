@@ -62,7 +62,7 @@ void stage_redraw_all(Stage* s);
 
 u8 stage_movement_collision(Stage* s, State actionType,
     i16 x, i16 y, i16 dx, i16 dy, i16 objectMoveTime,
-    u8* interactionLevel, u8* keyCount, u8* gemCount);
+    u8* access, u8* interactionLevel, u8* keyCount, u8* gemCount);
 
 u8 stage_check_automatic_movement(Stage* s, i16 x, i16 y, Vector2* target);
 
@@ -71,5 +71,7 @@ u8 stage_check_overlay(Stage* s, i16 x, i16 y);
 bool stage_check_conflict(Stage* s, i16 x, i16 y);
 
 void stage_mark_tile_solid(Stage* s, i16 x, i16 y, bool state);
+
+void stage_reset_room(Stage* s);
 
 #endif // __STAGE__

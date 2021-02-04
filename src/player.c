@@ -27,6 +27,7 @@ Player create_player(i16 x, i16 y, Stage* s) {
 
     Player pl;
     pl.pos = vec2(x, y);
+    pl.startPos = pl.pos;
     pl.target = pl.pos;
     pl.rpos = vec2(s->xoff + pl.pos.x * 4, 
         s->yoff + pl.pos.y*16);
@@ -43,7 +44,7 @@ Player create_player(i16 x, i16 y, Stage* s) {
     pl.gems = 0;
     pl.battery = 0;
 
-    memset(pl.spcItems, 6, 0);
+    memset(pl.spcItems, 0, 6);
 
     return pl;
 }
@@ -90,7 +91,7 @@ static void pl_control(Player* pl, Stage* s, i16 step) {
 
         actionType = stage_movement_collision(s, k,
                 pl->pos.x + dx, pl->pos.y + dy, 
-                dx, dy, MOVE_TIME, 
+                dx, dy, MOVE_TIME, pl->spcItems,
                 &pl->battery, &pl->keys, &pl->gems);
     }
 
@@ -131,6 +132,8 @@ static bool pl_check_camera(Player* pl, Stage* s) {
 
         pl->target.x -= dx;
         pl->target.y -= dy;
+
+        pl->startPos = pl->target;
 
         pl_compute_render_pos(pl, s);
 
@@ -339,4 +342,16 @@ void pl_force_wait(Player* pl, Stage* s) {
     pl->forcedInteraction = true;
     pl->moveTimer = INTERACTION_TIME;
 
+}
+
+
+void pl_reset(Player* pl, Stage* s) {
+
+    pl->pos = pl->startPos;
+    pl->target = pl->target;
+
+    pl_compute_render_pos(pl, s);
+
+    pl->moving = false;
+    pl->interacting = false;
 }

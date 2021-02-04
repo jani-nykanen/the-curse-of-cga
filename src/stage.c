@@ -758,7 +758,7 @@ static void swap_automatic_arrows(Stage* s, i16 dx, i16 dy, u8 v) {
 
 u8 stage_movement_collision(Stage* s, 
     State actionType, i16 x, i16 y, 
-    i16 dx, i16 dy, i16 objectMoveTime,
+    i16 dx, i16 dy, i16 objectMoveTime, u8* access,
     u8* interactionLevel, u8* keyCount, u8* gemCount) {
 
     u8 id = get_tile(s, s->roomTilesDynamic, x, y, 0);
@@ -768,12 +768,16 @@ u8 stage_movement_collision(Stage* s,
     // Rock
     case 2:
 
-        return move_boulder(s, x, y, dx, dy, objectMoveTime);
+        if (access == NULL || access[0])
+            return move_boulder(s, x, y, dx, dy, objectMoveTime);
+        return 0;
 
     // Bolt
     case 6:
 
-        if (actionType == STATE_PRESSED) {
+        if (access != NULL &&
+            access[1] && 
+            actionType == STATE_PRESSED) {
 
             swap_walls(s, x, y);
             return 2;
@@ -783,7 +787,9 @@ u8 stage_movement_collision(Stage* s,
     // Flower
     case 8:
 
-        if ((*interactionLevel) > 0 && 
+        if (access != NULL && 
+            access[3] && 
+            (*interactionLevel) > 0 && 
             actionType == STATE_PRESSED) {
 
             cut_flower(s, x, y);
@@ -796,7 +802,9 @@ u8 stage_movement_collision(Stage* s,
     // Ice block
     case 9:
 
-        if ((*interactionLevel) > 0 &&
+        if (access != NULL && 
+            access[4] &&
+            (*interactionLevel) > 0 &&
             actionType == STATE_PRESSED) {
 
             break_ice_block(s, x, y);
@@ -823,7 +831,9 @@ u8 stage_movement_collision(Stage* s,
     case 15:
     case 16:
 
-        if (actionType == STATE_PRESSED) {
+        if (access != NULL && 
+            access[2] &&
+            actionType == STATE_PRESSED) {
 
             swap_automatic_arrows(s, x, y, id);
             return 2;
@@ -833,7 +843,9 @@ u8 stage_movement_collision(Stage* s,
     // Rubble
     case 17:
 
-        if ((*interactionLevel) > 0 &&
+        if (access != NULL && 
+            access[5] &&
+            (*interactionLevel) > 0 &&
             actionType == STATE_PRESSED) {
 
             remove_rubble(s, x, y);
@@ -876,7 +888,8 @@ u8 stage_check_automatic_movement(Stage* s, i16 x, i16 y, Vector2* target) {
             STATE_DOWN, x, y, 
             ARROW_DIRX[tid], 
             ARROW_DIRY[tid], 
-            0, NULL, NULL, NULL) == 1) {
+            0, NULL, NULL, 
+            NULL, NULL) == 1) {
 
             target->x = x + ARROW_DIRX[tid];
             target->y = y + ARROW_DIRY[tid];
@@ -950,4 +963,19 @@ bool stage_check_conflict(Stage* s, i16 x, i16 y) {
 void stage_mark_tile_solid(Stage* s, i16 x, i16 y, bool state) {
 
     set_tile(s, s->roomTilesDynamic, x, y, 255 * (u8)state);
+}
+
+
+void stage_reset_room(Stage* s) {
+
+    tmap_clone_area(s->baseMap, 
+            s->roomTilesStatic, 0, 
+            s->camPos.x, s->camPos.y, 
+            s->roomWidth, s->roomHeight);
+    memcpy(s->roomTilesDynamic, s->roomTilesStatic, 
+        s->roomWidth * s->roomHeight);
+    memset(s->renderBuffer, 1, s->roomWidth * s->roomHeight);
+
+    s->rockAnim->timer = 0;
+    s->disappearTimer = 0;
 }

@@ -172,6 +172,13 @@ bool game_refresh(i16 step) {
         return false;
     }
 
+    if (keyb_get_normal_key(KEY_R) == STATE_PRESSED) {
+
+        stage_reset_room(gameStage);
+        pl_reset(player, gameStage);
+        return false;
+    }
+
     if (pl_update(player, gameStage, msgBox, step)) {
 
         mark_room_visited();

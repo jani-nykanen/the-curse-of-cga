@@ -11,6 +11,7 @@
 typedef struct {
 
     Vector2 pos;
+    Vector2 startPos;
     Vector2 target;
     Vector2 rpos;
     Vector2 dir;
@@ -40,5 +41,7 @@ void pl_draw(Player* pl, Bitmap* bmpPlayer);
 void pl_update_stage_tile_buffer(Player* pl, Stage* s);
 
 void pl_force_wait(Player* pl, Stage* s);
+
+void pl_reset(Player* pl, Stage* s);
 
 #endif // __PLAYER__

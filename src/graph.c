@@ -89,7 +89,7 @@ static void draw_text_base(
     dx = x;
     dy = y;
 
-    while ((c = text[i ++]) != '\0' && i < endIndex) {
+    while (i < endIndex && (c = text[i ++]) != '\0') {
 
         if (c == '\n') {
 
