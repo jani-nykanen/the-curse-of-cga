@@ -20,6 +20,7 @@ void clear_screen(u8 color);
 //
 
 void fill_rect(i16 x, i16 y, i16 w, i16 h, u8 color);
+void vertical_line(i16 x, i16 y, u8 shift, i16 h, u8 color);
 
 void draw_bitmap_fast(Bitmap* bmp, i16 x, i16 y);
 void draw_bitmap_region_fast(Bitmap* bmp, 

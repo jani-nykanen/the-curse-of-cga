@@ -128,6 +128,11 @@ void msg_draw(MessageBox* box, Bitmap* bmpFont,
             w, h, 0);
         fill_rect(dx, dy, w, h, 1);
 
+        vertical_line(dx, dy, 3, h, 0);
+        vertical_line(dx + w, dy, 3, h, 0);
+        fill_rect(dx, dy, w, 1, 0);
+        fill_rect(dx, dy+h, w, 1, 0);
+
         box->boxDrawn = true;
     }
 

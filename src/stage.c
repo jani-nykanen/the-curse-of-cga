@@ -439,8 +439,24 @@ static void stage_draw_wall(Stage* s, Bitmap* bmpTileset,
 
 void stage_draw(Stage* s, Bitmap* bmpTileset) {
 
+    const i16 MAX_ID = 19;
+    static const i16 SRCX[] = {
+        16, 0, 16, 16, 
+        0, 4, 8, 12, 
+        20, 20, 24, 28, 
+        32, 28, 32, 36, 
+        36, 36, 40, 40
+    };
+
+    static const i16 SRCY[] = {
+        0, 0, 0, 16,
+        16, 16, 16, 16,
+        0, 16, 0, 0, 
+        0, 16, 16, 0,
+        16, 32, 0, 16
+    };
+
     i16 x, y;
-    i16 dx, dy;
     i16 sx, sy;
     i16 index;
     u8 tid;
@@ -457,110 +473,37 @@ void stage_draw(Stage* s, Bitmap* bmpTileset) {
             // s->renderBuffer[index] = false;
 
             tid = get_tile(s, s->roomTilesStatic, x, y, 0);
-            dx = s->xoff + x*4;
-            dy = s->yoff + y*16;
 
-            switch (tid) {
+            if (tid <= MAX_ID) {
 
-            // Wall
-            case 1:
-                stage_draw_wall(s, bmpTileset, x, y);
-               continue;
+                if (tid == 1) {
 
-            // Water
-            case 3:
+                    stage_draw_wall(s, bmpTileset, x, y);
+                    continue;
+                }
+                else {
 
-                sx = 16;
-                sy = 16;
-                break;
-            
-            // Special walls
-            case 4:
-            case 5:
-
-                sx = (tid-4) * 4;
-                sy = 16;
-                break;
-
-            // Bolt
-            case 6:
-            case 7:
-
-                sx = 8 + 4 * (tid-6);
-                sy = 16;
-                break;
-
-            // Flower
-            case 8:
-
-                sx = 20;
-                sy = 0;
-                break;
-
-            // Ice block
-            case 9:
-
-                sx = 20;
-                sy = 16;
-                break;
-
-            // Key hole
-            case 10:
-
-                sx = 24;
-                sy = 0;
-                break;
-
-            // Arrows
-            case 11:
-            case 12:
-            case 13:
-            case 14:
-
-                sx = 28 + ((tid - 11) % 2) * 4;
-                sy = (tid - 11) / 2;
-                sy *= 16;
-                break;
-
-            // Arrow flippers
-            case 15:
-            case 16:
-
-                sx = 36;
-                sy = (tid - 15) * 16;
-                break;
-
-            // Rubble
-            case 17:
-
-                sx = 36;
-                sy = 32;
-                break;
-
-            // Gem holders
-            case 18:
-            case 19:
-
-                sx = 40;
-                sy = (tid - 18) * 16;
-                break;
-
-            default:
-                sx = 16;
-                sy = 0;
-                break;
+                    // Type-casting to get rid of warnings
+                    sx = SRCX[(u16)tid];
+                    sy = SRCY[(u16)tid];
+                }
             }
-
             // Items
-            if (tid >= ITEM_START_INDEX) {
+            else if (tid >= ITEM_START_INDEX) {
 
                 sx = 4 * (tid - ITEM_START_INDEX);
                 sy = 32;
             }
+            else {
+
+                sx = SRCX[0];
+                sy = SRCY[0];
+            }
 
             draw_bitmap_region_fast(bmpTileset,
                 sx, sy, 4, 16, 
-                dx, dy);
+                s->xoff + x*4, 
+                s->yoff + y*16);
         }
     }
 }

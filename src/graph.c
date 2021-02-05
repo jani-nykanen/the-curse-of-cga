@@ -162,6 +162,28 @@ void fill_rect(i16 x, i16 y, i16 w, i16 h, u8 color) {
 }
 
 
+void vertical_line(i16 x, i16 y, u8 shift, i16 h, u8 color) {
+
+    static const u8 MASK[] = {
+        3, 12, 48, 192};
+
+    u8 mask = MASK[shift % 4];
+    i16 dy;
+    u32 djump;
+    u8* out;
+
+    djump = (u32)((y/2) * 80 + x);
+    for (dy = 0; dy < h; ++ dy) {
+
+        out = (u8*)ADDR[dy & 1];;
+        out[djump] = (color & mask) | 
+                (out[djump] & ~mask);
+
+        djump += 80 * (dy & 1);
+    }
+}
+
+
 void draw_bitmap_fast(Bitmap* bmp, i16 x, i16 y) {
 
     draw_bitmap_region_fast(bmp, 0, 0, bmp->width/4, bmp->height, x, y);

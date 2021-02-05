@@ -56,6 +56,8 @@ static u8 oldBatteryLevel;
 
 static i16 transitionTimer;
 static u8 transitionMode;
+// For faster transition effect rendering
+static i16 oldTrHeight;
 
 
 static void draw_frame(Bitmap* bmp, i16 x, i16 y, i16 w, i16 h, 
@@ -374,6 +376,7 @@ static void set_clipping_area() {
 }
 
 
+// Not really a transition, but oh well
 static void draw_transition() {
 
     i16 x = gameStage->xoff;
@@ -382,33 +385,55 @@ static void draw_transition() {
     i16 w = gameStage->roomWidth * 4;
     i16 h = gameStage->roomHeight * 16;
 
-    i16 trHeight = transitionTimer / 6;
+    i16 trHeight;
+    i16 stageRow;
     i16 i;
+    i16 end;
 
     if (transitionMode == 2) {
 
-        trHeight = 5 - trHeight;
-        for (i = 0; i < trHeight; ++ i) {
+        trHeight = ((h/2) << 4) / TRANSITION_TIME * (TRANSITION_TIME - transitionTimer);
+        trHeight >>= 4;
+        
+        fill_rect(x, y, w, trHeight, 0);
+        fill_rect(x, y + h - trHeight, w, trHeight, 0);
 
-            fill_rect(x, y + i*16, w, 16, 0);
-            fill_rect(x, y + h - (i+1)*16, w, 16, 0);
-        }
+        oldTrHeight = trHeight;
     }
     else {
 
-        stage_partial_redraw(gameStage, trHeight);
-        stage_partial_redraw(gameStage, gameStage->roomHeight - trHeight -1);
+        trHeight = ((h/2) << 4) / TRANSITION_TIME * transitionTimer;
+        trHeight >>= 4;
+
+        stageRow = trHeight / 16;
+
+        end = 1;
+        if (oldTrHeight / 16 != stageRow) {
+            end = 2;
+        }
+        oldTrHeight = trHeight;
+
+        for (i = 0; i < end; ++ i) {
+
+            stage_partial_redraw(gameStage, stageRow + i);
+            stage_partial_redraw(gameStage, gameStage->roomHeight - stageRow - 1 - i);
+        }
         
         stage_draw(gameStage, bmpTileset);
-        stage_draw_objects(gameStage, bmpObjects);
-
-        
-        if ((i16)abs(player->pos.y - gameStage->roomHeight/2) < 5 - trHeight) {
+        stage_flush_redraw_buffer(gameStage);
+        //stage_draw_objects(gameStage, bmpObjects);
+/*
+        if ((i16)abs(player->pos.y - gameStage->roomHeight/2) < 5 - stageRow) {
 
             set_clipping_area();
             pl_draw(player, bmpFigure);
             toggle_clipping(false);
         }
+        */
+
+        trHeight %= 16;
+        fill_rect(x, y + stageRow*16, w, trHeight, 0);
+        fill_rect(x, y + h - stageRow*16 - trHeight, w, trHeight, 0);
     }
 }
 
