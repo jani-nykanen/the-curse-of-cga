@@ -960,3 +960,9 @@ Vector2 stage_find_player(Stage* s) {
 
     return vec2(0, 0);
 }
+
+
+void stage_recompute_wall_data(Stage* s) {
+
+    gen_wall_tile_map(s);
+}

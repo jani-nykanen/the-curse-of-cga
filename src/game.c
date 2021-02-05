@@ -129,6 +129,13 @@ static void pause_menu_callback(i16 cursorPos) {
         transitionMode = 2;
         break;
 
+    case 2:
+
+        transitionTimer = TRANSITION_TIME;
+        transitionMode = 3;
+
+        break;
+
     case 3:
 
         quit = true;
@@ -230,12 +237,22 @@ bool game_refresh(i16 step) {
 
             if ((-- transitionMode) > 0) {
 
+                if (transitionMode == 2) 
+                    player->startPos = stage_find_player(gameStage);
+
                 // TODO: Callback function?
                 stage_reset_room(gameStage);
                 stage_flush_redraw_buffer(gameStage);
                 pl_reset(player, gameStage);
 
-                transitionTimer += TRANSITION_TIME;
+                if (transitionMode == 2) {
+
+                    mapDrawn = false;
+                    stage_recompute_wall_data(gameStage);
+                    transitionMode = 1;
+                }
+
+                transitionTimer += TRANSITION_TIME;       
             }
             else {
 
@@ -447,7 +464,7 @@ static void draw_transition() {
     i16 trHeight;
     i16 stageRow;
 
-    if (transitionMode == 2) {
+    if (transitionMode >= 2) {
 
         trHeight = ((h/2 + 16) << 4) / TRANSITION_TIME * (TRANSITION_TIME - transitionTimer);
         trHeight >>= 8;

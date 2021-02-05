@@ -33,6 +33,7 @@ typedef struct {
     i16 xoff;
     i16 yoff;
     Vector2 camPos;
+    Vector2 initialCamPos;
 
     u8* renderBuffer;
     TileWallData* wallTiles;
@@ -78,5 +79,6 @@ void stage_flush_redraw_buffer(Stage* s);
 void stage_partial_redraw(Stage* s, i16 row);
 
 Vector2 stage_find_player(Stage* s);
+void stage_recompute_wall_data(Stage* s);
 
 #endif // __STAGE__
