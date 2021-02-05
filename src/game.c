@@ -9,6 +9,7 @@
 #include "util.h"
 #include "player.h"
 #include "msgbox.h"
+#include "menu.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -47,6 +48,7 @@ static Bitmap* bmpLogo = NULL;
 static Stage* gameStage;
 static Player* player;
 static MessageBox* msgBox;
+static Menu* pauseMenu;
 
 static u8* visitedRooms;
 
@@ -58,6 +60,8 @@ static i16 transitionTimer;
 static u8 transitionMode;
 // For faster transition effect rendering
 static i16 oldTrHeight;
+
+static bool quit = false;
 
 
 static void draw_frame(Bitmap* bmp, i16 x, i16 y, i16 w, i16 h, 
@@ -111,7 +115,41 @@ static void mark_room_visited() {
 }
 
 
+static void pause_menu_callback(i16 cursorPos) {
+
+    switch (cursorPos) {
+        
+    case 0:
+        stage_redraw_all(gameStage);
+        break;
+
+    case 1:
+
+        transitionTimer = TRANSITION_TIME;
+        transitionMode = 2;
+        break;
+
+    case 3:
+
+        quit = true;
+        break;
+    
+    default:
+        break;
+    }
+
+    pauseMenu->active = false;
+}
+
+
 bool init_game_scene() {
+
+    static const str BUTTON_NAMES[] = {
+        "RESUME",
+        "RESET ROOM",
+        "GO TO START",
+        "QUIT GAME"
+    };
 
     Vector2 startPos;
 
@@ -140,6 +178,12 @@ bool init_game_scene() {
     }
     stage_flush_redraw_buffer(gameStage);
 
+    pauseMenu = new_menu(BUTTON_NAMES, pause_menu_callback, 4);
+    if (pauseMenu == NULL) {
+
+        return true;
+    }
+
     alloc_object(player, Player, true);
     *player = create_player(startPos.x, startPos.y, gameStage);
 
@@ -162,12 +206,16 @@ bool init_game_scene() {
 
     transitionTimer = 0;
     transitionMode = 2;
+    
+    quit = false;
 
     return false;
 }
 
 
 bool game_refresh(i16 step) {
+
+    if (quit) return true;
 
     // TODO: Move this elsewhere (or remove in the release build?)
     if (keyb_get_normal_key(KEY_Q) == STATE_PRESSED &&
@@ -203,6 +251,17 @@ bool game_refresh(i16 step) {
 
             stage_redraw_all(gameStage);
         }
+        return false;
+    }
+
+    if (pauseMenu->active) {
+
+        menu_update(pauseMenu, step);
+        return false;
+    }
+    else if (keyb_get_normal_key(KEY_RETURN) == STATE_PRESSED) {
+
+        menu_activate(pauseMenu, 0);
         return false;
     }
 
@@ -387,53 +446,41 @@ static void draw_transition() {
 
     i16 trHeight;
     i16 stageRow;
-    i16 i;
-    i16 end;
 
     if (transitionMode == 2) {
 
-        trHeight = ((h/2) << 4) / TRANSITION_TIME * (TRANSITION_TIME - transitionTimer);
-        trHeight >>= 4;
+        trHeight = ((h/2 + 16) << 4) / TRANSITION_TIME * (TRANSITION_TIME - transitionTimer);
+        trHeight >>= 8;
+        trHeight <<= 4;
         
         fill_rect(x, y, w, trHeight, 0);
         fill_rect(x, y + h - trHeight, w, trHeight, 0);
-
-        oldTrHeight = trHeight;
     }
     else {
 
-        trHeight = ((h/2) << 4) / TRANSITION_TIME * transitionTimer;
+        oldTrHeight = trHeight;
+        trHeight = ((h/2 + 16) << 4) / TRANSITION_TIME * transitionTimer;
         trHeight >>= 4;
 
-        stageRow = trHeight / 16;
+        stageRow = fixed_round(trHeight, 16);
 
-        end = 1;
-        if (oldTrHeight / 16 != stageRow) {
-            end = 2;
-        }
-        oldTrHeight = trHeight;
+        if (stageRow < gameStage->roomHeight/2 &&
+            oldTrHeight / 16 != stageRow) {
 
-        for (i = 0; i < end; ++ i) {
+            stage_partial_redraw(gameStage, stageRow );
+            stage_partial_redraw(gameStage, gameStage->roomHeight-1 - stageRow );
 
-            stage_partial_redraw(gameStage, stageRow + i);
-            stage_partial_redraw(gameStage, gameStage->roomHeight - stageRow - 1 - i);
+            stage_draw(gameStage, bmpTileset);
+            stage_draw_objects(gameStage, bmpObjects);
         }
         
-        stage_draw(gameStage, bmpTileset);
-        stage_flush_redraw_buffer(gameStage);
-        //stage_draw_objects(gameStage, bmpObjects);
-/*
         if ((i16)abs(player->pos.y - gameStage->roomHeight/2) < 5 - stageRow) {
 
             set_clipping_area();
             pl_draw(player, bmpFigure);
             toggle_clipping(false);
         }
-        */
-
-        trHeight %= 16;
-        fill_rect(x, y + stageRow*16, w, trHeight, 0);
-        fill_rect(x, y + h - stageRow*16 - trHeight, w, trHeight, 0);
+        
     }
 }
 
@@ -446,6 +493,14 @@ void game_redraw() {
             gameStage->xoff, gameStage->yoff,
             gameStage->roomWidth*4, 
             gameStage->roomHeight*16);
+        return;
+    }
+
+    if (pauseMenu->active) {
+
+        menu_draw(pauseMenu, bmpFont, 
+            gameStage->xoff + gameStage->roomWidth*2,
+            gameStage->yoff + gameStage->roomHeight*8);
         return;
     }
 
@@ -495,4 +550,7 @@ void dispose_game_scene() {
 
     if (msgBox != NULL)
         free(msgBox);
+
+    if (pauseMenu != NULL)
+        free(pauseMenu);
 }

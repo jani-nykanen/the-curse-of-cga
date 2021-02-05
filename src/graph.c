@@ -173,9 +173,9 @@ void vertical_line(i16 x, i16 y, u8 shift, i16 h, u8 color) {
     u8* out;
 
     djump = (u32)((y/2) * 80 + x);
-    for (dy = 0; dy < h; ++ dy) {
+    for (dy = y; dy < y + h; ++ dy) {
 
-        out = (u8*)ADDR[dy & 1];;
+        out = (u8*)ADDR[dy & 1];
         out[djump] = (color & mask) | 
                 (out[djump] & ~mask);
 
@@ -253,7 +253,7 @@ void draw_bitmap_region_fast_skip_lines(Bitmap* bmp,
 
 
 void draw_text_fast(Bitmap* font, const str text, 
-    i16 x, i16 y, u16 endIndex, bool center) {
+    i16 x, i16 y, i16 endIndex, bool center) {
 
     draw_text_base(draw_bitmap_region_fast,
         font, text, x, y, endIndex, center);

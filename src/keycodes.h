@@ -16,7 +16,9 @@ typedef enum {
     KEY_Q = 16,
     KEY_W = 17,
     KEY_E = 18,
-    KEY_R = 19
+    KEY_R = 19,
+
+    KEY_RETURN = 28
 
 } KeyState;
 

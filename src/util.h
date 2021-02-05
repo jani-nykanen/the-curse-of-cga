@@ -20,4 +20,6 @@ i16 neg_mod(i16 m, i16 n);
 
 i16 clamp_i16(i16 x, i16 min, i16 max);
 
+void draw_box(i16 dx, i16 dy, i16 w, i16 h, i16 shadowOff);
+
 #endif // __UTILITY__

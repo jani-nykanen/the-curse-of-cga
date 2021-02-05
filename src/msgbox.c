@@ -1,7 +1,9 @@
 #include "msgbox.h"
+
 #include "err.h"
 #include "graph.h"
 #include "keyb.h"
+#include "util.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -123,16 +125,7 @@ void msg_draw(MessageBox* box, Bitmap* bmpFont,
 
     if (!box->boxDrawn) {
 
-        fill_rect(dx + SHADOW_OFFSET/4, 
-            dy + SHADOW_OFFSET, 
-            w, h, 0);
-        fill_rect(dx, dy, w, h, 1);
-
-        vertical_line(dx, dy, 3, h, 0);
-        vertical_line(dx + w, dy, 3, h, 0);
-        fill_rect(dx, dy, w, 1, 0);
-        fill_rect(dx, dy+h, w, 1, 0);
-
+        draw_box(dx, dy, w, h, SHADOW_OFFSET);
         box->boxDrawn = true;
     }
 

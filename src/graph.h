@@ -30,7 +30,7 @@ void draw_bitmap_region_fast_skip_lines(Bitmap* bmp,
     i16 sx, i16 sy, i16 sw, i16 sh, 
     i16 dx, i16 dy, i16 skip);
 void draw_text_fast(Bitmap* font, const str text, 
-    i16 x, i16 y, u16 endIndex, bool center);
+    i16 x, i16 y, i16 endIndex, bool center);
 
 void draw_bitmap_region(Bitmap* bmp, 
     i16 sx, i16 sy, i16 sw, i16 sh, 
