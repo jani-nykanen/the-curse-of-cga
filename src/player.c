@@ -46,6 +46,9 @@ Player create_player(i16 x, i16 y, Stage* s) {
 
     memset(pl.spcItems, 0, 6);
 
+    // DEBUG, TODO: Remove from release
+    memset(pl.spcItems, 1, 6);
+
     return pl;
 }
 
@@ -174,6 +177,8 @@ static void pl_obtain_special_item(Player* pl, MessageBox* box, u8 index) {
     msg_build(box, ITEM_MESSAGES[(i16)index]);
 
     pl->spcItems[(i16)index] = 1;
+
+    pl->startPos = pl->pos;
 }
 
 
