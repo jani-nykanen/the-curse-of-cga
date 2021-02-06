@@ -357,6 +357,8 @@ void pl_reset(Player* pl, Stage* s) {
 
     pl_compute_render_pos(pl, s);
 
+    pl->battery = 0;
+
     pl->moving = false;
     pl->interacting = false;
 }
