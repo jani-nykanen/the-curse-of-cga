@@ -47,7 +47,7 @@ Player create_player(i16 x, i16 y, Stage* s) {
     memset(pl.spcItems, 0, 6);
 
     // DEBUG, TODO: Remove from release
-    memset(pl.spcItems, 1, 6);
+    // memset(pl.spcItems, 1, 6);
 
     return pl;
 }

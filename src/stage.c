@@ -24,6 +24,7 @@ static bool is_solid(u8 v) {
         1, 1, 1, 0, 
         0, 0, 0, 1,
         1, 1, 1, 1,
+        1,
 
         // "Overflow" values, remove in the
         // release version (or not, it might break)
@@ -440,13 +441,14 @@ static void stage_draw_wall(Stage* s, Bitmap* bmpTileset,
 
 void stage_draw(Stage* s, Bitmap* bmpTileset) {
 
-    const i16 MAX_ID = 19;
+    const i16 MAX_ID = 20;
     static const i16 SRCX[] = {
         16, 0, 16, 16, 
         0, 4, 8, 12, 
         20, 20, 24, 28, 
         32, 28, 32, 36, 
-        36, 36, 40, 40
+        36, 36, 40, 40,
+        40
     };
 
     static const i16 SRCY[] = {
@@ -454,7 +456,8 @@ void stage_draw(Stage* s, Bitmap* bmpTileset) {
         16, 16, 16, 16,
         0, 16, 0, 0, 
         0, 16, 16, 0,
-        16, 32, 0, 16
+        16, 32, 0, 16,
+        32
     };
 
     i16 x, y;
@@ -693,8 +696,9 @@ static void swap_automatic_arrows(Stage* s, i16 dx, i16 dy, u8 v) {
             tid = get_tile(s, s->roomTilesStatic, x, y, 0);
             if (tid >= 11 && tid <= 14) {
 
-                set_tile_both(s, x, y, NEW_VALUE[tid - 11]);
+                set_tile(s, s->roomTilesStatic, x, y, NEW_VALUE[tid - 11]);
             }
+          
         }
     }
     set_tile_both(s, dx, dy, v == 15 ? 16 : 15);
