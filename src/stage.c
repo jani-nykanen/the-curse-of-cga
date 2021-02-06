@@ -26,8 +26,9 @@ static bool is_solid(u8 v) {
         1, 1, 1, 1,
 
         // "Overflow" values, remove in the
-        // release version
+        // release version (or not, it might break)
         0, 0, 0, 0, 
+        0, 0, 0, 0,
         0, 0, 0, 0,
         0, 0, 0, 0,
     };

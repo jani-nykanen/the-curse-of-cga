@@ -13,11 +13,11 @@ static const i16 INTERACTION_TIME = MOVE_TIME + 1;
 
 static const str ITEM_MESSAGES[] = {
     "You obtain a POWER\nGLOVE! Time to\nmove some rocks!",
-    "You obtain a HAMMER!\nTime to smash things!",
-    "You obtain a WRENCH!\nTime to turn things!",
+    "You obtain a HAMMER!\nTime to smash some\nnails!!",
+    "You obtain a WRENCH!\nTime to turn arrows!",
     
-    "You obtain ELECTRIC\nSCISSORS! Time\nto cut bushes!\nConsumes battery." ,
-    "You obtain a\nBLOWTORCH! Time\nto melt ice!\nConsumes battery.\nFor some reason.",
+    "You obtain ELECTRIC\nSCISSORS! Time to\ncut some bushes!\nConsumes battery." ,
+    "You obtain a\nBLOWTORCH! Time\nto melt some ice!\nConsumes battery.\nFor some reason.",
     "You obtain a SHOVEL!\nTime to shovel some\nrubble! Consumes\nbattery. Don't ask\nwhy."
 };
 
