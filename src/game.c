@@ -254,10 +254,6 @@ bool game_refresh(i16 step) {
 
                 transitionTimer += TRANSITION_TIME;       
             }
-            else {
-
-                stage_redraw_all(gameStage);
-            }
         }
         return false;
     }
@@ -476,10 +472,10 @@ static void draw_transition() {
     else {
 
         oldTrHeight = trHeight;
-        trHeight = ((h/2 + 16) << 4) / TRANSITION_TIME * transitionTimer;
+        trHeight = ((h/2 + 32) << 4) / TRANSITION_TIME * transitionTimer;
         trHeight >>= 4;
 
-        stageRow = fixed_round(trHeight, 16);
+        stageRow = -1 + fixed_round(trHeight, 16);
 
         if (stageRow < gameStage->roomHeight/2 &&
             oldTrHeight / 16 != stageRow) {
