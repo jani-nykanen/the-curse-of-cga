@@ -1,7 +1,6 @@
 #ifndef __GAME__
 #define __GAME__
 
-
 #include "types.h"
 
 bool init_game_scene();

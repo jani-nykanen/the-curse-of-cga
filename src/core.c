@@ -17,6 +17,17 @@ static void destroy_core() {
 }
 
 
+static bool check_default_key_shortcuts() {
+
+    if (keyb_get_normal_key(KEY_Q) == STATE_PRESSED &&
+        (keyb_get_normal_key(KEY_LCTRL) & STATE_DOWN_OR_PRESSED)) {
+
+        return true;
+    }
+    return false;
+}
+
+
 static bool main_loop(i16 frameSkip) {
 
     if ( (frameCounter ++) == frameSkip) {
@@ -26,6 +37,9 @@ static bool main_loop(i16 frameSkip) {
         if (cbRefresh != NULL) {
 
             if (cbRefresh(frameSkip+1))
+                return true;
+
+            if (check_default_key_shortcuts())
                 return true;
         }
         keyb_update();

@@ -10,6 +10,8 @@
 #include "player.h"
 #include "msgbox.h"
 #include "menu.h"
+#include "title.h"
+#include "core.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -220,15 +222,25 @@ bool init_game_scene() {
 }
 
 
-bool game_refresh(i16 step) {
+static bool quit_event() {
 
-    if (quit) return true;
-
-    // TODO: Move this elsewhere (or remove in the release build?)
-    if (keyb_get_normal_key(KEY_Q) == STATE_PRESSED &&
-        (keyb_get_normal_key(KEY_LCTRL) & STATE_DOWN_OR_PRESSED)) {
+    if (init_title_screen_scene()) {
 
         return true;
+    }
+
+    core_register_callbacks(title_screen_refresh, 
+        title_screen_redraw);
+
+    return false;
+}
+
+
+bool game_refresh(i16 step) {
+
+    if (quit) {
+        
+        return quit_event();
     }
 
     if (transitionMode != 0) {

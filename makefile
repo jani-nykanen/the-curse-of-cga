@@ -6,7 +6,7 @@ png2cga:
 .PHONY: bitmaps
 bitmaps:
 	mkdir -p ASSETS
-	./tools/png2cga dev/bitmaps/font.png ASSETS/FONT.BIN
+	./tools/png2cga dev/bitmaps/font.png ASSETS/FONT.BIN -mask
 	./tools/png2cga dev/bitmaps/figure.png ASSETS/FIGURE.BIN -mask
 	./tools/png2cga dev/bitmaps/tileset.png ASSETS/TILESET.BIN
 	./tools/png2cga dev/bitmaps/hud.png ASSETS/HUD.BIN
