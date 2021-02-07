@@ -19,6 +19,11 @@
 #include <math.h>
 
 
+static const str STORY = 
+"Your graphics card is\nbroken and you only\nhave your old CGA\ncard left. You have to\nfind eight magic gems\nin your basement and\n"
+"perform a demonic\nritual to get your\ndead card back!";
+
+
 static const i16 MAP_X = 80-19;
 static const i16 MAP_Y = 77;
 // TODO: In future, fetch the following info
@@ -198,6 +203,11 @@ bool init_game_scene() {
 
     alloc_object(msgBox, MessageBox, true);
     *msgBox = create_message_box();
+
+    if (msg_build(msgBox, STORY)) {
+
+        return true;
+    }
 
     visitedRooms = (u8*)malloc(ROOM_COUNT_X * ROOM_COUNT_Y);
     if (visitedRooms == NULL) {
@@ -487,7 +497,7 @@ static void draw_transition() {
         trHeight = ((h/2 + 32) << 4) / TRANSITION_TIME * transitionTimer;
         trHeight >>= 4;
 
-        stageRow = -1 + fixed_round(trHeight, 16);
+        stageRow = -2 + fixed_round(trHeight, 16);
 
         if (stageRow < gameStage->roomHeight/2 &&
             oldTrHeight / 16 != stageRow) {
@@ -512,7 +522,9 @@ static void draw_transition() {
 
 void game_redraw() {
 
-    if (msgBox->active) {
+    if (quit) return;
+
+    if (transitionMode == 0 && msgBox->active) {
 
         msg_draw(msgBox, bmpFont,
             gameStage->xoff, gameStage->yoff,
@@ -521,7 +533,7 @@ void game_redraw() {
         return;
     }
 
-    if (pauseMenu->active) {
+    if (transitionMode == 0 && pauseMenu->active) {
 
         menu_draw(pauseMenu, bmpFont, 
             gameStage->xoff + gameStage->roomWidth*2,

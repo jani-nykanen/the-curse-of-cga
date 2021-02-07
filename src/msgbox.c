@@ -99,6 +99,9 @@ bool msg_update(MessageBox* box, i16 step){
     }
     else if (keyb_any_pressed()) {
 
+        // "Flush" the enter key press away
+        keyb_get_normal_key(KEY_RETURN);
+
         box->active = false;
         return true;
     }
@@ -129,7 +132,7 @@ void msg_draw(MessageBox* box, Bitmap* bmpFont,
         box->boxDrawn = true;
     }
 
-    draw_text_fast(bmpFont, (const str)box->buffer, 
+    draw_text(bmpFont, (const str)box->buffer, 
         dx + TEXT_OFFSET/4, dy + TEXT_OFFSET,
         box->lastCharPointer, false);
     box->lastCharPointer = box->charPointer;

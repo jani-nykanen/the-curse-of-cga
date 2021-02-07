@@ -57,7 +57,7 @@ void draw_box(i16 dx, i16 dy, i16 w, i16 h, i16 shadowOff) {
             w, h, 0);
     }
 
-    fill_rect(dx, dy, w, h, 1);
+    fill_rect(dx, dy, w, h, 2);
 
     vertical_line(dx, dy, 3, h, 0);
     vertical_line(dx + w, dy, 3, h, 0);

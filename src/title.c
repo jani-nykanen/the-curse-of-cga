@@ -11,6 +11,9 @@
 #include <stdlib.h>
 
 
+static const i16 CLEAR_TIME = 30;
+
+
 static Bitmap* bmpLogo = NULL;
 static Bitmap* bmpFont = NULL;
 
@@ -20,6 +23,7 @@ static bool bgDrawn;
 static i16 buttonPressed;
 static i8 titlePhase = -1;
 static i16 flickerTimer;
+static i16 clearTimer;
 
 
 static void menu_callback(i16 button) {
@@ -37,7 +41,15 @@ bool init_title_screen_scene() {
 
     bgDrawn = false;
     buttonPressed = 0;
-    titlePhase = titlePhase < 0 ? 0 : 1;
+    if (titlePhase < 0) {
+
+        titlePhase = 0;
+    }
+    else {
+
+        clearTimer = CLEAR_TIME;
+        titlePhase = 1;
+    }
     flickerTimer = 29;
 
     if ((bmpFont = load_bitmap("ASSETS/FONT.BIN")) == NULL ||
@@ -58,6 +70,12 @@ bool init_title_screen_scene() {
 
 
 bool title_screen_refresh(i16 step) {
+
+    if (clearTimer >= 0) {
+
+        clearTimer -= step;
+        return false;
+    }
 
     if (titlePhase == 0) {
 
@@ -91,11 +109,27 @@ bool title_screen_refresh(i16 step) {
 }
 
 
+static void clear_to_blue() {
+
+    i16 h = ((CLEAR_TIME - clearTimer) << 4) / CLEAR_TIME * 100;
+    h >>= 4;
+
+    fill_rect(0, 0, 80, h, 1);
+    fill_rect(0, 200-1 - h, 80, h, 1);
+}
+
+
 void title_screen_redraw() {
+
+    if (clearTimer >= 0) {
+
+        clear_to_blue();
+        return;
+    }
 
     if (!bgDrawn) {
 
-        clear_screen(2);
+        clear_screen(1);
 
         draw_bitmap_fast(bmpLogo, 40 - bmpLogo->width/8, 16);
         draw_text(bmpFont, "A \"FINISHED PROTOTYPE\"",
@@ -110,7 +144,7 @@ void title_screen_redraw() {
     if (titlePhase == 0) {
 
         if (flickerTimer < 30)
-            fill_rect(28, 144, 24, 8, 2);
+            fill_rect(28, 144, 24, 8, 1);
         else
             draw_text(bmpFont, "PRESS ENTER", 40, 144, -1, true);
     }

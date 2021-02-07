@@ -126,14 +126,14 @@ void menu_draw(Menu* m, Bitmap* bmpFont, i16 dx, i16 dy) {
         // Also draw buttons here because why not
         for (i = 0; i < m->buttonCount; ++ i) {
 
-            draw_text_fast(bmpFont, (const str)m->buttonNames[i], x + 5, y + 5 + i*10, -1, false);
+            draw_text(bmpFont, (const str)m->buttonNames[i], x + 5, y + 5 + i*10, -1, false);
         }
 
         m->boxDrawn = true;
     }
 
-    fill_rect(x+1, y+5, 4, m->buttonCount*10, 1);
-    draw_bitmap_region_fast(bmpFont, 
+    fill_rect(x+1, y+5, 4, m->buttonCount*10, 2);
+    draw_bitmap_region(bmpFont, 
         6, 0, 4, 8, 
         x + 1, 
         y + 5 + m->cursorPos*10);
