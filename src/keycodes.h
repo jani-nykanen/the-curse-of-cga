@@ -1,7 +1,7 @@
 #ifndef __KEYCODES__
 #define __KEYCODES__
 
-// TODO: At least add alphabet, enter and space...
+// TODO: At least add alphabet? (NOPE!)
 typedef enum {
 
     KEY_ESCAPE = 1,

@@ -241,9 +241,9 @@ bool game_refresh(i16 step) {
                     player->startPos = stage_find_player(gameStage);
 
                 // TODO: Callback function?
+                pl_reset(player, gameStage);
                 stage_reset_room(gameStage);
                 stage_flush_redraw_buffer(gameStage);
-                pl_reset(player, gameStage);
 
                 if (transitionMode == 2) {
 
@@ -403,7 +403,7 @@ static void draw_hud_static() {
 
         
     // Logo
-    draw_bitmap_fast(bmpLogo, 80 - 21, 0);
+    draw_bitmap_fast(bmpLogo, 80 - 21, 8);
 
     // Map
     draw_map_frame(MAP_X, MAP_Y);

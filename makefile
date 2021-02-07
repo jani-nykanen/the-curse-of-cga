@@ -23,3 +23,7 @@ assets: bitmaps tilemaps
 .PHONY: tmx2bin
 tmx2bin:
 	(cd tools/src/tmx2bin; go build -o ../../$@)
+
+linecount:
+	(cd src; find . -name '*.c' | xargs wc -l)
+	(cd src; find . -name '*.h' | xargs wc -l)
