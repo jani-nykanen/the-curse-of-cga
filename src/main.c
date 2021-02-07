@@ -34,4 +34,8 @@ void main() {
         title_screen_redraw);
 
     core_run(1);
+
+    // Assuming that the title screen is the scene
+    // where we quit
+    dispose_title_screen_scene();
 }

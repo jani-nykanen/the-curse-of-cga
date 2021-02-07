@@ -12,6 +12,7 @@
 #include "menu.h"
 #include "title.h"
 #include "core.h"
+#include "ending.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -22,6 +23,9 @@
 static const str STORY = 
 "Your graphics card is\nbroken and you only\nhave your old CGA\ncard left. You have to\nfind eight magic gems\nin your basement and\n"
 "perform a demonic\nritual to get your\ndead card back!";
+
+static const str ENDING = 
+"Congratulations!\nWith the power of\ngems, you perform a\ndemonic ritual and\nexchange your soul\nfor a working\ngraphics card.\nHooray!";
 
 
 static const i16 MAP_X = 80-19;
@@ -246,7 +250,25 @@ static bool quit_event() {
 }
 
 
-bool game_refresh(i16 step) {
+static bool go_to_ending() {
+
+    if (init_ending_scene()) {
+
+        return true;
+    }
+
+    core_register_callbacks(
+        ending_refresh,
+        ending_redraw);
+
+    return false;
+}
+
+
+bool game_refresh(i16 step) {   
+
+    // Hard-coding woohoo
+    const u8 REQUIRED_PLACED_GEMS = 1;
 
     if (quit) {
         
@@ -284,9 +306,20 @@ bool game_refresh(i16 step) {
 
         if (msg_update(msgBox, step)) {
 
+            if (gameStage->gemsPlaced >= REQUIRED_PLACED_GEMS) {
+
+                return go_to_ending();
+            }
+
             stage_redraw_all(gameStage);
         }
         return false;
+    }
+
+    // Trigger ending
+    if (gameStage->gemsPlaced >= REQUIRED_PLACED_GEMS) {
+
+        return msg_build(msgBox, ENDING);
     }
 
     if (pauseMenu->active) {

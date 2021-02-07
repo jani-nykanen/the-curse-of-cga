@@ -44,6 +44,7 @@ typedef struct {
     Vector2 disappearPos;
     i16 disappearTimer;
     u8 disappearTile;
+    u8 gemsPlaced;
 
 } Stage;
 

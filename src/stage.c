@@ -352,6 +352,7 @@ Stage* new_stage(Tilemap* baseMap,
     s->disappearPos = vec2(0, 0);
     s->disappearTimer = 0;
     s->disappearTile = 0;
+    s->gemsPlaced = 0;
 
     return s;
 }
@@ -679,6 +680,7 @@ static void remove_rubble(Stage* s, i16 x, i16 y) {
 static void set_gem(Stage* s, i16 x, i16 y) {
 
     set_tile_permanent(s, x, y, 19);
+    ++ s->gemsPlaced;
 }
 
 
@@ -814,7 +816,6 @@ u8 stage_movement_collision(Stage* s,
 
             set_gem(s, x, y);
             -- (*gemCount);
-
             return 2;
         }
         return 0;
