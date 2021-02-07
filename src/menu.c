@@ -40,7 +40,7 @@ Menu* new_menu(const str* buttonNames, MenuCallback buttonCb, u16 len) {
 
         if (strlen(buttonNames[i]) > m->width) {
 
-            m->width = (i16)strlen(buttonNames[i]);
+            m->width = (i16)strlen(buttonNames[i]) +1;
         }
     }
 

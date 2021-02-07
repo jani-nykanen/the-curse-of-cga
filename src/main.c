@@ -2,7 +2,7 @@
 #include "graph.h"
 #include "err.h"
 
-#include "game.h"
+#include "title.h"
 
 #include <stdio.h>
 
@@ -23,15 +23,15 @@ void main() {
 
     init_core();
 
-    if (init_game_scene()) {
+    if (init_title_screen_scene()) {
 
         print_errors();
         return;
     }
 
     core_register_callbacks(
-        game_refresh,
-        game_redraw);
+        title_screen_refresh,
+        title_screen_redraw);
 
     core_run(1);
 }
