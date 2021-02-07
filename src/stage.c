@@ -441,14 +441,15 @@ static void stage_draw_wall(Stage* s, Bitmap* bmpTileset,
 
 void stage_draw(Stage* s, Bitmap* bmpTileset) {
 
-    const i16 MAX_ID = 20;
+    const i16 MAX_ID = 24;
     static const i16 SRCX[] = {
         16, 0, 16, 16, 
         0, 4, 8, 12, 
         20, 20, 24, 28, 
         32, 28, 32, 36, 
         36, 36, 40, 40,
-        40
+        40, 0, 4, 8, 
+        12
     };
 
     static const i16 SRCY[] = {
@@ -457,7 +458,8 @@ void stage_draw(Stage* s, Bitmap* bmpTileset) {
         0, 16, 0, 0, 
         0, 16, 16, 0,
         16, 32, 0, 16,
-        32
+        32, 48, 48, 48,
+        48
     };
 
     i16 x, y;
