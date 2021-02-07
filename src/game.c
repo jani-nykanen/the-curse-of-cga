@@ -268,7 +268,7 @@ static bool go_to_ending() {
 bool game_refresh(i16 step) {   
 
     // Hard-coding woohoo
-    const u8 REQUIRED_PLACED_GEMS = 1;
+    const u8 REQUIRED_PLACED_GEMS = 8;
 
     if (quit) {
         
@@ -512,7 +512,7 @@ static void draw_transition() {
     i16 w = gameStage->roomWidth * 4;
     i16 h = gameStage->roomHeight * 16;
 
-    i16 trHeight;
+    i16 trHeight = -1;
     i16 stageRow;
 
     if (transitionMode >= 2) {
@@ -526,14 +526,13 @@ static void draw_transition() {
     }
     else {
 
-        oldTrHeight = trHeight;
-        trHeight = ((h/2 + 32) << 4) / TRANSITION_TIME * transitionTimer;
+        trHeight = ((h/2) << 4) / TRANSITION_TIME * transitionTimer;
         trHeight >>= 4;
 
-        stageRow = -2 + fixed_round(trHeight, 16);
+        stageRow = fixed_round(trHeight, 16);
 
         if (stageRow < gameStage->roomHeight/2 &&
-            oldTrHeight / 16 != stageRow) {
+            oldTrHeight != stageRow) {
 
             stage_partial_redraw(gameStage, stageRow );
             stage_partial_redraw(gameStage, gameStage->roomHeight-1 - stageRow );
@@ -548,7 +547,7 @@ static void draw_transition() {
             pl_draw(player, bmpFigure);
             toggle_clipping(false);
         }
-        
+        oldTrHeight = stageRow;
     }
 }
 

@@ -13,6 +13,7 @@ bitmaps:
 	./tools/png2cga dev/bitmaps/objects.png ASSETS/OBJECTS.BIN -mask
 	./tools/png2cga dev/bitmaps/logo.png ASSETS/LOGO.BIN
 	./tools/png2cga dev/bitmaps/title.png ASSETS/TITLE.BIN
+	./tools/png2cga dev/bitmaps/ending.png ASSETS/ENDING.BIN -mask
 
 .PHONY: tilemaps
 tilemaps:

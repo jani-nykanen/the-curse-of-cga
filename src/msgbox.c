@@ -10,7 +10,7 @@
 #include <string.h>
 
 
-static const i16 CHAR_TIME = 4;
+static const i16 CHAR_TIME = 3;
 
 
 static void compute_max_dimensions(const str msg, u16* w, u16* h) {
