@@ -12,6 +12,10 @@ A downloadable binary can be found in the releases: https://github.com/jani-nyka
 
 I wanted to have a playable browser build, but em-dosbox and emscripten both refused to work (syntax errors, conflicting files and all that kind of stuff).
 
+### Controls:
+
+Arrow keys for moving, R for restarting, Enter for pausing (you can also find a restart option there)
+
 -----
 
 ## Building
