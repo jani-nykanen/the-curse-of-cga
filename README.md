@@ -1,4 +1,6 @@
-## The Curse of CGA
+![](https://github.com/jani-nykanen/the-curse-of-cga/blob/main/dev/release.gif?raw=true)
+
+# The Curse of CGA
 
 ...is a puzzle game for MS-DOS with CGA graphics. Or, actually, a prototype of a puzzle game. Or something I call "finished prototype": the game has all the major features, it only lacks of things like audio, options, more animations and a proper story intro (and proper ending). However, I don't want to call it "beta" or "alpha" because there will never be a truly "finished" version, just this "unfinished finished" one. Getting confusing? That's okay.
 
